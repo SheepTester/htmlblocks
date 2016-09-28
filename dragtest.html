@@ -11,9 +11,6 @@ body {
   overflow: hidden;
 }
 .block {
-  position: absolute;
-  top: 0;
-  left: 0;
   -webkit-user-select: none;
   white-space: nowrap;
   color: white;
@@ -21,6 +18,16 @@ body {
   cursor: -moz-grab;
   cursor: -webkit-grab;
   cursor: grab;
+  display: inline-block;
+  float: left;
+  clear: both;
+  height: 15px;
+  font-size: 15px;
+}
+.loop {
+  position: relative;
+  z-index: -1;
+  height: 100px;
 }
 .dragging {
   z-index: 10000;
@@ -29,22 +36,37 @@ body {
   cursor: -moz-grabbing;
   cursor: -webkit-grabbing;
   cursor: grabbing;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
-#red {
-  background: red;
+.red {
+  background: #f44336;
 }
-#green {
-  background: green;
+.green {
+  background: #4CAF50;
 }
-#blue {
-  background: blue;
+.blue {
+  background: #2196F3;
+}
+.yellow {
+  background: #FFC107;
+}
+.l1 {
+  margin-left: 10px;
+}
+.placeholder {
+  background: #eee;
+  color: transparent;
+  box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
 }
     </style>
   </head>
   <body>
-    <div class="block" id="red">I am a block!</div>
-    <div class="block" id="green">I am a block!</div>
-    <div class="block" id="blue">I am a block!</div>
+    <div class="block red">I am a red block!</div>
+    <div class="block green">I am a green block!</div>
+    <!--<div class="block loop yellow">I am a loop!</div>-->
+    <div class="block blue">I am a blue block!</div>
     
     <script src="../sheep.js"></script>
     <script src="dragtest.js"></script>
