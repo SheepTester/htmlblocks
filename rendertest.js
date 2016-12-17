@@ -30,57 +30,145 @@ var script=[
     ]},
   ]},
 ];
-function render(part) {
-  var inner='';
+function render(part,inLoop) {
+  var inner='',inLoop;
+  if (!inLoop) inLoop='';
   for (var i=0;i<part.length;i++) {
-    var nodrag='';
+    var nodrag='',id=inLoop+i,placeholder='';
+    if (part[i].placeholder) placeholder=' placeholder';
     if (part[i].nodrag) nodrag=' nodrag';
-    if (part[i].type=='stack'||part[i].type=='c'&&part[i].blocks.length===0) inner+='<div class="block '+nodrag+'" style="background-color:'+part[i].color+'">'+part[i].label+'</div>';
-    else if (part[i].type=='text') inner+='<span class="text block '+nodrag+'" contenteditable>'+part[i].label+'</span>';
+    if (part[i].type=='stack'||part[i].type=='c'&&part[i].blocks.length===0) inner+='<div class="block '+nodrag+' '+placeholder+'" style="background-color:'+part[i].color+'" id="b'+id+'">'+part[i].label+'</div>';
+    else if (part[i].type=='text') inner+='<span class="text block '+nodrag+' '+placeholder+'" contenteditable id="b'+id+'">'+part[i].label+'</span>';
     else if (part[i].type=='attr') {
       var value=part[i].value;
       if (!value) value=' ';
-      inner+='<div class="attr block '+nodrag+'" style="background-color:'+part[i].color+'">'+part[i].label+' <span class="value"'+(nodrag?'':' contenteditable')+'>'+value+'</span></div>';
+      inner+='<div class="attr block '+nodrag+' '+placeholder+'" style="background-color:'+part[i].color+'" id="b'+id+'">'+part[i].label+' <span class="value"'+(nodrag?'':' contenteditable')+'>'+value+'</span></div>';
     }
-    else if (part[i].type=='c') inner+='<div class="loop block '+nodrag+'" style="background-color:'+part[i].color+'"><span class="label">'+part[i].label+'</span>'+render(part[i].blocks)+'</div>';
+    else if (part[i].type=='c') inner+='<div class="loop block '+nodrag+' '+placeholder+'" style="background-color:'+part[i].color+'" id="b'+id+'"><span class="label">'+part[i].label+'</span>'+render(part[i].blocks,id+'-')+'</div>';
   }
   return inner;
 }
 document.querySelector('#scripts').innerHTML=render(script);
+function locateBlock(id,options) {
+  var indices=id.slice(1).split('-'),block=script[Number(indices[0])],options;
+  if (options&&options.getParent) {
+    var last=indices[indices.length-1];
+    indices.splice(-1,1);
+  }
+  for (var i=1;i<indices.length;i++) {
+    if (block&&block.blocks) block=block.blocks[Number(indices[i])];
+  }
+  if (options) {
+    if (options.getParent) return [block,Number(last)];
+    if (options.getIndices) {
+      for (var i=0;i<indices.length;i++) {
+        indices[i]=Number(indices[i]);
+      }
+      return indices;
+    }
+  }
+  else return block;
+}
 document.querySelector('#scripts').oninput=function(e){
   e.target.textContent=e.target.textContent;
+  var block;
+  if (e.target.className.includes('value')) block=locateBlock(e.target.parentNode.id);
+  else if (e.target.className.includes('text')) block=locateBlock(e.target.id);
+  if (block.type=='text') block.label=e.target.textContent;
+  else if (block.type=='attr') block.value=e.target.textContent;
 }
-var mousefollower,placeholderInScript,mX,mY,oX,oY;
+var mX,mY,oX,oY,blocksBeingDragged=[];
 document.querySelector('#scripts').onmousedown=function(e){
   var target=e.target;
   if (target.className.includes('label')) target=target.parentNode;
   if (target.className.includes('value')) target=target.parentNode;
   if (!target.className.includes('nodrag')) {
-    mousefollower=target.cloneNode(true);
-    mousefollower.className+=" drag";
+    var b=locateBlock(target.id);
+    b.placeholder=true;
+    blocksBeingDragged.push(b);
+    var mousefollower=target.cloneNode(true);
     oX=mX-target.getBoundingClientRect().left;
     oY=mY-target.getBoundingClientRect().top;
-    mousefollower.style.left=(mX-oX)+"px";
-    mousefollower.style.top=(mY-oY)+"px";
-    document.body.appendChild(mousefollower);
+    document.querySelector('#drag').style.left=(mX-oX)+"px";
+    document.querySelector('#drag').style.top=(mY-oY)+"px";
+    document.querySelector('#drag').appendChild(mousefollower);
     target.className+=' placeholder';
-    placeholderInScript=target;
+    if (target.className.includes('attr')) {
+      while (target.nextElementSibling&&target.nextElementSibling.className.includes('attr')&&!target.nextElementSibling.className.includes('nodrag')) {
+        target=target.nextElementSibling;
+        var b=locateBlock(target.id);
+        b.placeholder=true;
+        blocksBeingDragged.push(b);
+        var mousefollower=target.cloneNode(true);
+        document.querySelector('#drag').appendChild(mousefollower);
+        target.className+=' placeholder';
+      }
+    } else {
+      while (target.nextElementSibling&&!target.nextElementSibling.className.includes('nodrag')) {
+        target=target.nextElementSibling;
+        var b=locateBlock(target.id);
+        b.placeholder=true;
+        blocksBeingDragged.push(b);
+        var mousefollower=target.cloneNode(true);
+        document.querySelector('#drag').appendChild(mousefollower);
+        target.className+=' placeholder';
+      }
+    }
   }
+}
+function removePlaceholders(part,removeTag) {
+  for (var i=0;i<part.length;i++) {
+    if (part[i].placeholder) {
+      if (removeTag) part[i].placeholder=false;
+      else part.splice(i,1);
+      i--;
+    } else if (part[i].blocks) {
+      part[i].blocks=removePlaceholders(part[i].blocks,removeTag);
+    }
+  }
+  return part;
 }
 document.body.onmousemove=function(e){
   mX=e.clientX+document.body.scrollLeft;
   mY=e.clientY+document.body.scrollTop;
-  if (mousefollower) {
-    mousefollower.style.left=(mX-oX)+"px";
-    mousefollower.style.top=(mY-oY)+"px";
+  if (document.querySelector('#drag').innerHTML) {
+    document.querySelector('#drag').style.left=(mX-oX)+"px";
+    document.querySelector('#drag').style.top=(mY-oY)+"px";
+    script=removePlaceholders(script,false);
+    document.querySelector('#drag').style.display="none";
+    var elatloc=document.elementFromPoint(mX,mY);
+    if (elatloc.className.includes('value')||elatloc.className.includes('label')) elatloc=elatloc.parentNode;
+    var blockIndices=locateBlock(elatloc.id,{getIndices:1}),block=script[blockIndices[0]],type=locateBlock(elatloc.id);
+    if (type&&type.type=='c'&&blocksBeingDragged[0].type!='attr') {
+      if (blocksBeingDragged[0].type=='attr') {
+        for (var i=1;i<blockIndices.length-1;i++) {
+          if (block&&block.blocks) block=block.blocks[blockIndices[i]];
+        }
+        if (block&&block.blocks) block.blocks.splice.apply(block.blocks,[blockIndices[blockIndices.length-1],0].concat(blocksBeingDragged));
+      } else {
+        for (var i=1;i<blockIndices.length;i++) {
+          if (block&&block.blocks) block=block.blocks[blockIndices[i]];
+        }
+        if (block&&block.blocks) block.blocks.splice.apply(block.blocks,[0,0].concat(blocksBeingDragged));
+      }
+    } else {
+      //
+      for (var i=1;i<blockIndices.length-1;i++) {
+        if (block&&block.blocks) block=block.blocks[blockIndices[i]];
+      }
+      if (block&&block.blocks) block.blocks.splice.apply(block.blocks,[blockIndices[blockIndices.length-1],0].concat(blocksBeingDragged)); // http://stackoverflow.com/questions/7032550/javascript-insert-an-array-inside-another-array
+    }
+    document.querySelector('#drag').style.display="block";
+    document.querySelector('#scripts').innerHTML=render(script);
   }
 }
 document.body.onmouseup=function(e){
-  if (mousefollower) {
-    document.body.removeChild(mousefollower);
+  if (document.querySelector('#drag').innerHTML) {
+    document.querySelector('#drag').innerHTML='';
   }
   if (document.querySelector('.placeholder')) {
-    document.querySelector('.placeholder').className=document.querySelector('.placeholder').className.replace(/placeholder/g,'');
+    script=removePlaceholders(script,true);
+    document.querySelector('#scripts').innerHTML=render(script);
   }
-  mousefollower=false;
+  blocksBeingDragged=[];
 }
