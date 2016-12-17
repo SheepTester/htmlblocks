@@ -17,18 +17,25 @@
         white-space: pre;
         text-shadow: 0 0 2px black;
         cursor: -webkit-grab;
+        user-select: none;
       }
-      .block:active {
-        cursor: -webkit-grabbing;
+      .block.nodrag {
+        cursor: default;
+      }
+      .text {
+        cursor: auto;
+        white-space: pre;
+        background: #333;
       }
       .loop {
         border-right: none;
         padding-right: 0;
       }
-      /*.loop .block {
-        box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-        border: none;
-      }*/
+      .loop .block {
+        /*box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        border: none;*/
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
       .label {
         clear: left;
         float: left;
@@ -40,13 +47,31 @@
       .attr .value {
         background: white;
         color: #666;
-        border: 2px solid rgba(0,0,0,0.2);
+        /*border: 2px solid rgba(0,0,0,0.2);*/
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
         white-space: pre;
         text-shadow: none;
         cursor: auto;
+        display: inline-block;
+        min-width: 5px;
       }
       .loop + .attr {
-        padding: 2px 5px;
+        padding: 1.5px 5px;
+      }
+      .drag {
+        z-index: 100;
+        opacity: 0.8;
+        box-shadow: 0 0 3px rgba(0,0,0,0.3);
+        cursor: -moz-grabbing;
+        cursor: -webkit-grabbing;
+        cursor: grabbing;
+        position: absolute;
+        top: 0;
+        left: 0;
+        white-space: nowrap;
+      }
+      .placeholder, .placeholder * {
+        background: white !important;
       }
     </style>
   </head>
@@ -54,50 +79,7 @@
     <div id="scripts"></div>
 
     <script src="../sheep.js"></script>
-    <script>
-var script=[
-  {'label':'!DOCTYPE html','color':'#aaa','type':'stack'},
-  {'label':'html','color':'#804040','type':'c','blocks':[
-    {'label':'head','color':'#804040','type':'c','blocks':[
-      {'label':'title','color':'#CC6666','type':'c','blocks':[
-        {'label':'Block renderer','color':'#333','type':'stack'},
-      ]},
-      {'label':'meta','color':'#804040','type':'stack'},
-      {'label':'charset','color':'#4E6273','type':'attr','value':'UTF-8'},
-      {'label':'meta','color':'#CC6666','type':'stack'},
-      {'label':'name','color':'#81A2BE','type':'attr','value':'description'},
-      {'label':'content','color':'#81A2BE','type':'attr','value':'Renders blocks.'},
-      {'label':'link','color':'#CC6666','type':'stack'},
-      {'label':'rel','color':'#81A2BE','type':'attr','value':'stylesheet'},
-      {'label':'type','color':'#81A2BE','type':'attr','value':'text/css'},
-      {'label':'href','color':'#81A2BE','type':'attr','value':'style.css'},
-    ]},
-    {'label':'body','color':'#804040','type':'c','blocks':[
-      {'label':'div','color':'#CC6666','type':'c','blocks':[
-        {'label':'stuff\nmorestuff','color':'#333','type':'stack'},
-      ]},
-      {'label':'id','color':'#81A2BE','type':'attr','value':'scripts'},
-      {'label':'script','color':'#CC6666','type':'c','blocks':[]},
-      {'label':'src','color':'#81A2BE','type':'attr','value':'../sheep.js'},
-      {'label':'script','color':'#CC6666','type':'c','blocks':[]},
-      {'label':'src','color':'#81A2BE','type':'attr','value':'main.js'},
-    ]},
-  ]},
-];
-function render(part) {
-  var inner='';
-  for (var i=0;i<part.length;i++) {
-    if (part[i].type=='stack'||part[i].type=='c'&&part[i].blocks.length===0) inner+='<div class="block" style="background-color:'+part[i].color+'">'+part[i].label+'</div>';
-    else if (part[i].type=='attr') {
-      var value=part[i].value;
-      if (!value) value=' ';
-      inner+='<div class="attr block" style="background-color:'+part[i].color+'">'+part[i].label+' <span class="value">'+value+'</span></div>';
-    }
-    else if (part[i].type=='c') inner+='<div class="loop block" style="background-color:'+part[i].color+'"><span class="label">'+part[i].label+'</span>'+render(part[i].blocks)+'</div>';
-  }
-  return inner;
-}
-document.querySelector('#scripts').innerHTML=render(script);
-    </script>
+    <script src="rendertest.js"></script>
   </body>
+  <!-- MADE BY SEAN -->
 </html>
