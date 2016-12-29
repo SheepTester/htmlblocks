@@ -70,13 +70,25 @@ function locateBlock(id,options) {
   else return block;
 }
 document.querySelector('#scripts').oninput=function(e){
-  e.target.textContent=e.target.textContent;
   var block;
   if (e.target.className.includes('value')) block=locateBlock(e.target.parentNode.id);
   else if (e.target.className.includes('text')) block=locateBlock(e.target.id);
-  if (block.type=='text') block.label=e.target.textContent;
-  else if (block.type=='attr') block.value=e.target.textContent;
+  console.log(e.target.textContent);
+  if (block.type=='text') block.label=e.target.innerHTML.replace(/<br>/g,'\n');
+  else if (block.type=='attr') block.value=e.target.innerHTML.replace(/<br>/g,'\n');
 }
+document.querySelector('#scripts').onkeydown=function(e){
+  if (e.keyCode === 13) {
+    document.execCommand('insertHTML',false,'<br><br>');
+    return false;
+  }
+}
+document.querySelector('#scripts').addEventListener("paste",function(e){
+  // http://stackoverflow.com/questions/6899659/remove-formatting-from-a-contenteditable-div
+  e.preventDefault();
+  var text=e.clipboardData.getData("text/plain");
+  document.execCommand("insertHTML",false,text);
+});
 var mX,mY,oX,oY,blocksBeingDragged=[];
 document.querySelector('#scripts').onmousedown=function(e){
   var target=e.target;
