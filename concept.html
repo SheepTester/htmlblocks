@@ -27,18 +27,48 @@
       <div id="palette">
         <ul id="sections">
           <!-- http://www.w3schools.com/tags/ref_byfunc.asp -->
-          <li>Text</li>
-          <li class="active">Formatting</li>
-          <li>Organisation</li>
-          <li>Forms and Inputs</li>
-          <li>Media</li>
-          <li>Tables and Tables</li>
-          <li>Other</li>
+          <li id='textLI' class="active">Text</li>
+          <li id='frmtLI'>Formatting</li>
+          <li id='orgnLI'>Organisation</li>
+          <li id='frmsLI'>Forms and Inputs</li>
+          <li id='mdiaLI'>Media</li>
+          <li id='tbleLI'>Tables and Lists</li>
+          <li id='attrLI'>Attributes</li>
+          <li id='othrLI'>Other</li>
         </ul>
         <div id="blocks">
+          <h1 id='textH1'>Text</h1>
+          <div class='text block'>block</div>
+          <div class='text block'>block</div>
+          <h1 id='frmtH1'>Formatting</h1>
+          <div class='frmt block'>block</div>
+          <div class='frmt block'>block</div>
+          <h1 id='orgnH1'>Organisation</h1>
+          <div class='orgn block'>block</div>
+          <div class='orgn block'>block</div>
+          <div class='orgn block'>a long block that also shows there can be diff nums of blocks per section</div>
+          <h1 id='frmsH1'>Forms and inputs</h1>
+          <div class='frms block'>block</div>
+          <div class='frms block'>block</div>
+          <h1 id='mdiaH1'>Media</h1>
+          <div class='mdia block'>block</div>
+          <div class='mdia block'>block</div>
+          <h1 id='tbleH1'>Tables and Lists</h1>
+          <div class='tble block'>block</div>
+          <div class='tble block'>block</div>
+          <h1 id='attrH1'>Attributes</h1>
+          <div class='attr block'>block</div>
+          <div class='attr block'>block</div>
+          <h1 id='othrH1'>Other</h1>
+          <div class='othr block'>block</div>
+          <div class='othr block'>block</div>
+          <div id="blankScrollThingy"></div>
         </div>
       </div>
       <div id="otherstuff">
+        <p id="title">Title</p>
+        <button id="refresh"></button>
+        <button id="fullscreen"></button>
         <iframe id="stage"></iframe>
         <ul id='files'>
           <li class='html open'><span>index</span></li>
@@ -57,7 +87,7 @@
     <script>
       var d=document.querySelector('#stage').contentWindow.document;
       d.open();
-      d.write('<h1>Hello world!</h1><p>Lorem ipsum</p>');
+      d.write('<h1>Hello world!</h1><p>Lorem ipsum</p><title>Test</title>');
       d.close();
       document.querySelector('#files').onclick=function(e){
         var targ;
@@ -76,8 +106,33 @@
         if (e.target.tagName=='LI') {
           if (document.querySelector('.active')) document.querySelector('.active').className=document.querySelector('.active').className.replace(/active/g,'');
           e.target.className='active';
+          document.querySelector('#blocks').querySelector('#'+e.target.id.slice(0,4)+'H1').scrollIntoView(true);
         }
-      }
+      };
+      var h1scrolls=[];
+      (function(){
+        var h1s=document.querySelectorAll('#blocks h1');
+        for (var i=0;i<h1s.length;i++) h1scrolls.push(h1s[i].offsetTop-document.querySelector('#blocks').offsetTop);
+
+        document.querySelector('#blankScrollThingy').style.height=(document.querySelector('#blocks').clientHeight-18)+'px';
+      })();
+      document.querySelector('#blocks').onscroll=function(){
+        // document.querySelector('#blocks').scrollTop
+        // document.querySelector('#orgnH1').offsetTop-document.querySelector('#blocks').offsetTop
+        var activeH1=document.querySelector('#'+document.querySelector('.active').id+'H1'),
+        blocks=document.querySelector('#blocks'),
+        scroll=blocks.scrollTop;
+        for (var i=h1scrolls.length-1;i>=0;i--) {
+          if (scroll>=h1scrolls[i]) {
+            i++;
+            if (activeH1!=document.querySelector('#blocks h1:nth-of-type('+i+')')) {
+              if (document.querySelector('.active')) document.querySelector('.active').className=document.querySelector('.active').className.replace(/active/g,'');
+              document.querySelector('#sections li:nth-child('+i+')').className='active';
+            }
+            break;
+          }
+        }
+      };
       document.querySelector('#scripts').addEventListener('contextmenu',function(e){
         if (!document.querySelector('.menu')) {
           var s=document.createElement('UL');
@@ -93,9 +148,20 @@
         document.querySelector('.menu').style.top=(e.clientY-5)+"px";
         e.preventDefault();
       },false);
-      window.onclick=function(){
+      window.onclick=function(e){
         if (document.querySelector('.menu')) document.body.removeChild(document.querySelector('.menu'));
+        if (document.body.className=='fullscreen'&&e.clientX<=10) document.body.className='';
       }
+      if (document.querySelector('#stage').contentDocument.title) {
+        document.title=document.querySelector('#stage').contentDocument.title+' - HyperBlocks';
+        document.querySelector('#title').innerHTML=document.querySelector('#stage').contentDocument.title;
+      } else {
+        document.title='Untitled - HyperBlocks';
+        document.querySelector('#title').innerHTML='Untitled';
+      }
+      document.querySelector('#fullscreen').onclick=function(){
+        document.body.className='fullscreen';
+      };
     </script>
   </body>
   <!-- MADE BY SEAN -->
