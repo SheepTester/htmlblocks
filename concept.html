@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>HTML Blocks Concept</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="The concept art for the HTML Blocks editor."/>
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link rel="stylesheet" href="concept.css">
+    <!-- <link rel="stylesheet" href="icons.css"> -->
+  </head>
+  <body>
+    <ul id="bar">
+      <li id="logo">HYPERBLOCKS</li>
+      <li class="btn">file<ul>
+        <li>save</li>
+        <li>open</li>
+        <li>new</li>
+      </ul></li>
+      <li class="btn">edit<ul>
+        <li>cut</li>
+        <li>copy</li>
+        <li>paste</li>
+      </ul></li>
+      <li class="btn">about</li>
+    </ul>
+    <div id='stuff'>
+      <div id="palette">
+        <ul id="sections">
+          <!-- http://www.w3schools.com/tags/ref_byfunc.asp -->
+          <li>Text</li>
+          <li class="active">Formatting</li>
+          <li>Organisation</li>
+          <li>Forms and Inputs</li>
+          <li>Media</li>
+          <li>Tables and Tables</li>
+          <li>Other</li>
+        </ul>
+        <div id="blocks">
+        </div>
+      </div>
+      <div id="otherstuff">
+        <iframe id="stage"></iframe>
+        <ul id='files'>
+          <li class='html open'><span>index</span></li>
+          <li class='css'><span>style</span></li>
+          <li class='js'><span>main</span></li>
+          <li class='img'><span>sheep</span></li>
+          <li id='new'><span>+</span></li>
+        </ul>
+      </div>
+      <div id="scripts">
+
+      </div>
+    </div>
+
+    <script src="../sheep.js"></script>
+    <script>
+      var d=document.querySelector('#stage').contentWindow.document;
+      d.open();
+      d.write('<h1>Hello world!</h1><p>Lorem ipsum</p>');
+      d.close();
+      document.querySelector('#files').onclick=function(e){
+        var targ;
+        if (e.target.tagName=='SPAN') targ=e.target.parentNode;
+        else if (e.target.tagName=='LI') targ=e.target;
+        if (targ) {
+          if (targ.id=='new') {
+
+          } else {
+            if (document.querySelector('.open')) document.querySelector('.open').className=document.querySelector('.open').className.replace(/ open/g,'');
+            targ.className+=' open';
+          }
+        }
+      }
+      document.querySelector('#sections').onclick=function(e){
+        if (e.target.tagName=='LI') {
+          if (document.querySelector('.active')) document.querySelector('.active').className=document.querySelector('.active').className.replace(/active/g,'');
+          e.target.className='active';
+        }
+      }
+      document.querySelector('#scripts').addEventListener('contextmenu',function(e){
+        if (!document.querySelector('.menu')) {
+          var s=document.createElement('UL');
+          s.className='menu';
+          s.innerHTML='<li>duplicate</li><li>delete</li><li>add text block</li>';
+          s.onclick=function(e){
+            // placeholder
+            if (e.target.tagName=='LI') console.log(e.target.innerHTML);
+          }
+          document.body.appendChild(s);
+        }
+        document.querySelector('.menu').style.left=(e.clientX-5)+"px";
+        document.querySelector('.menu').style.top=(e.clientY-5)+"px";
+        e.preventDefault();
+      },false);
+      window.onclick=function(){
+        if (document.querySelector('.menu')) document.body.removeChild(document.querySelector('.menu'));
+      }
+    </script>
+  </body>
+  <!-- MADE BY SEAN -->
+</html>
