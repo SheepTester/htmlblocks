@@ -148,6 +148,7 @@ function identify(scriptlevel,mode) {
   var mode;
   if (mode) {
     if (mode=='getThis') {
+      if (scriptlevel.length<2) return scripts[Number(scriptlevel[0])];
       var tempScript=scripts[Number(scriptlevel[0])][Number(scriptlevel[1])+1];
       for (var i=2;i<scriptlevel.length;i++) {
         tempScript=tempScript.blocks[Number(scriptlevel[i])];
@@ -156,6 +157,7 @@ function identify(scriptlevel,mode) {
     }
   } else {
     var levels=scriptlevel.split('-'),tempScript=scripts[Number(levels[0])][Number(levels[1])+1];
+    if (levels.length<2) return scripts[Number(levels[0])];
     for (var i=2;i<levels.length;i++) {
       tempScript=tempScript.blocks[Number(levels[i])];
     }
@@ -238,10 +240,10 @@ document.body.onmousemove=function(e){
           if (drag.levels.length<=2) scripts[drag.levels[0]].splice(drag.levels[drag.levels.length-1]+1);
           else drag.siblings.splice(drag.levels[drag.levels.length-1]);
         }
+        document.querySelector('.script[data-script="'+drag.levels[0]+'"]').innerHTML=render(scripts[drag.levels[0]].slice(1),drag.levels[0]);
+        fit(document.querySelector('.script[data-script="'+drag.levels[0]+'"]'));
       }
       document.querySelector('#drag').style.width=document.querySelector('#drag').offsetWidth+'px';
-      document.querySelector('.script[data-script="'+drag.levels[0]+'"]').innerHTML=render(scripts[drag.levels[0]].slice(1),drag.levels[0]);
-      fit(document.querySelector('.script[data-script="'+drag.levels[0]+'"]'));
     }
     document.querySelector('#drag').style.left=(e.clientX-drag.offsetMX)+'px';
     document.querySelector('#drag').style.top=(e.clientY-drag.offsetMY)+'px';
@@ -251,50 +253,69 @@ document.body.onmousemove=function(e){
       if (all.length>1) console.warn("THERE SHOULD ONLY BE ONE OF YOU.");
       for (var i=0;i<all.length;i++) {
         var levels=all[i].dataset.script.split('-');
-        identify(levels.slice(0,-1),'getThis').blocks.splice(levels[levels.length-1],1);
+        if (levels.length>2) identify(levels.slice(0,-1),'getThis').blocks.splice(Number(levels[levels.length-1]),1);
+        else identify(levels.slice(0,-1),'getThis').splice(Number(levels[levels.length-1])+1,1);
       }
-      document.querySelector('.script[data-script="'+drag.levels[0]+'"]').innerHTML=render(scripts[drag.levels[0]].slice(1),drag.levels[0]);
-      fit(document.querySelector('.script[data-script="'+drag.levels[0]+'"]'));
+      renderAll();
+      fit(document);
     }
     var newarea=document.elementFromPoint(e.clientX,e.clientY);
-    if (newarea&&newarea.id!='scripts'&&newarea.className!='script') {
+    if (newarea&&newarea.id!='scripts'&&newarea.className!='script'&&!newarea.dataset.tag&&!newarea.parentNode.dataset.tag) {
       if (['UL','SPAN','INPUT'].includes(newarea.tagName)) newarea=newarea.parentNode;
       if (newarea.className=='PLACEHOLDER') console.warn("SHOULDN'T YOU BE GONE BY NOW?!");
       if (drag.type=='attr') {
         //
       } else {
         try {
-          var newareaLevels=newarea.dataset.script.split('-'),newareaScript=identify(newareaLevels,'getThis');
+          var newareaLevels=newarea.dataset.script.split('-'),
+          newareaScript=identify(newareaLevels,'getThis'),
+          newareaParent=identify(newareaLevels.slice(0,-1),'getThis');
+          if (newareaLevels.length>2) newareaParent=newareaParent.blocks;
           if (newareaScript.blocks) {
             if (!document.querySelector('.PLACEHOLDER')) {
               newareaScript.blocks.push({tag:'PLACEHOLDER'});
               console.log('Added placeholder');
             }
+          } else {
+            newareaLevels[newareaLevels.length-1]=Number(newareaLevels[newareaLevels.length-1])+1;
+            if (newareaLevels.length<=2) newareaLevels[newareaLevels.length-1]++;
+            var nextBlock=newareaParent[newareaLevels[newareaLevels.length-1]];
+            while (nextBlock&&blocks[nextBlock.tag].type=='attr') {
+              newareaLevels[newareaLevels.length-1]++;
+              nextBlock=newareaParent[newareaLevels[newareaLevels.length-1]];
+            }
+            console.log(newareaLevels[newareaLevels.length-1]);
+            newareaParent.splice(newareaLevels[newareaLevels.length-1],0,{tag:'PLACEHOLDER'});
           }
         } catch (e) {
           console.log(newarea);
           console.log(newareaLevels);
           console.log(newareaScript);
+          console.log(newareaParent);
           console.log(e);
         }
       }
     }
     document.querySelector('#drag').style.display='block';
-    document.querySelector('.script[data-script="'+drag.levels[0]+'"]').innerHTML=render(scripts[drag.levels[0]].slice(1),drag.levels[0]);
-    fit(document.querySelector('.script[data-script="'+drag.levels[0]+'"]'));
+    renderAll();
+    fit(document);
   }
 };
 document.body.onmouseup=function(e){
-  if (document.querySelector('.PLACEHOLDER')) {
-    var all=document.querySelectorAll('.PLACEHOLDER');
-    for (var i=0;i<all.length;i++) {
-      var levels=all[i].dataset.script.split('-');
-      identify(levels.slice(0,-1),'getThis').blocks.splice(levels[levels.length-1],1);
-    }
-  }
   if (drag.officiallyDragging) {
-    drag.script.splice(0,0,[e.clientX-drag.offsetMX,e.clientY-drag.offsetMY])
-    scripts.push(drag.script);
+    if (document.querySelector('.PLACEHOLDER')) {
+      var all=document.querySelectorAll('.PLACEHOLDER');
+      for (var i=0;i<all.length;i++) {
+        var levels=all[i].dataset.script.split('-'),blockz;
+        if (levels.length>2) blockz=identify(levels.slice(0,-1),'getThis').blocks;
+        else blockz=identify(levels.slice(0,-1),'getThis');
+        blockz.splice(Number(levels[levels.length-1])+1,1);
+        for (var j=drag.script.length-1;j>=0;j--) blockz.splice(Number(levels[levels.length-1])+1,0,drag.script[j]);
+      }
+    } else {
+      drag.script.splice(0,0,[e.clientX-drag.offsetMX,e.clientY-drag.offsetMY]);
+      scripts.push(drag.script);
+    }
     renderAll();
     fit(document);
   }
