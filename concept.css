@@ -14,6 +14,7 @@ body {
   color: white;
   font-family: 'Lato', sans-serif;
   font-size: 15px;
+  transition: background .5s cubic-bezier(1,0,1,1);
 }
 #bar {
   margin: 0;
@@ -64,6 +65,9 @@ body {
 }
 .btn > ul li {
   padding: 5px;
+}
+.btn > ul li:hover {
+  background: rgba(0,0,0,0.1);
 }
 #stuff {
   display: block;
@@ -181,7 +185,8 @@ body {
   background-color: rgba(255,255,255,0.2);
   cursor: default;
 }
-#sections li:nth-child(1){border-color:#C2C2C2;}#blocks h1:nth-of-type(1){color:#C2C2C2;}.block.text{background:#C2C2C2;}
+.block.txtb{background:#333;}
+#sections li:nth-child(1){border-color:#BD806A;}#blocks h1:nth-of-type(1){color:#BD806A;}.block.text{background:#BD806A;}
 #sections li:nth-child(2){border-color:#9B6ABD;}#blocks h1:nth-of-type(2){color:#9B6ABD;}.block.frmt{background:#9B6ABD;}
 #sections li:nth-child(3){border-color:#6A92BC;}#blocks h1:nth-of-type(3){color:#6A92BC;}.block.orgn{background:#6A92BC;}
 #sections li:nth-child(4){border-color:#6ABC88;}#blocks h1:nth-of-type(4){color:#6ABC88;}.block.frms{background:#6ABC88;}
@@ -251,6 +256,7 @@ body {
 }
 .block {
   /* NOTE: this is temporary */
+  /*font-family: monospace;*/
   padding: 5px;
   font-size: 15px;
   color: white;
@@ -263,6 +269,9 @@ body {
   -webkit-user-select: none;
   cursor: -webkit-grab;
   white-space: nowrap;
+}
+body.fullscreen {
+  background: #CC6666;
 }
 body.fullscreen > *:not(#stuff),
 body.fullscreen #stuff > *:not(#otherstuff),

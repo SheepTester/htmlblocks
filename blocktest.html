@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Block rendering test</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="My second test for rendering and dragging blocks."/>
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <style>
+      html, body, #scripts {
+        height: 100%;
+        width: 100%;
+      }
+      body {
+        font-family: 'Lato', sans-serif;
+        background: #222;
+      }
+      body, .script {
+        margin: 0;
+        padding: 0;
+      }
+      .script {
+        list-style: none;
+        position: absolute;
+        font-size: 0;
+        white-space: pre;
+      }
+      .script li, .script .c span, .script .text {
+        display: table;
+        float: left;
+        clear: left;
+        background: #CC6666;
+        padding: 5px;
+        font-size: 15px;
+        color: white;
+        text-shadow: 0 0 2px black;
+        border: 2px solid rgba(0,0,0,0.2);
+        height: 15px;
+        cursor: -webkit-grab;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .script .attr {
+        clear: none;
+      }
+      .script .attr input {
+        border: none;
+        height: 15px;
+        margin-left: 5px;
+        box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
+      }
+      .script .c {
+        background: none;
+        border: none;
+        padding: 0;
+        border-left: 2px solid rgba(0,0,0,0.2);
+      }
+      .script .c span {
+        border-left: none;
+      }
+      .script .c .cstart {
+        border-bottom: none;
+      }
+      .script .c .cend {
+        border-top: none;
+      }
+      .script .c .cend.emptyCend {
+        height: 0;
+        padding: 0 5px;
+      }
+      .script .c ul {
+        background: none;
+        float: left;
+        clear: left;
+        padding-left: 0;
+        border-left: 15px solid rgba(0,0,0,0.2);
+      }
+      .script .text {
+        min-height: 18px;
+      }
+      .getTextLength {
+        position: fixed;
+        bottom: -100px;
+        white-space: pre;
+      }
+      #palette {
+        left: 10px;
+        top: 10px;
+        background: rgba(255,255,255,0.2);
+      }
+      #palette li, #palette textarea {
+        margin: 10px;
+        float: none;
+      }
+      #drag {
+        position: fixed;
+      }
+      .script .PLACEHOLDER {
+        border: none;
+        height: 0;
+        padding: 0;
+        width: 50px;
+        box-shadow: 0 0 5px 2px white;
+        position: relative;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id='palette' class='script'></ul>
+    <div id='scripts'></div>
+    <ul class='script' id='drag' data-script='0'></ul>
+
+    <script src="../sheep.js"></script>
+    <script src='blocktest.js'></script>
+  </body>
+  <!-- MADE BY SEAN -->
+</html>

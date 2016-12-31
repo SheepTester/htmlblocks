@@ -22,6 +22,7 @@
         <li>paste</li>
       </ul></li>
       <li class="btn">about</li>
+      <li class="btn">help</li>
     </ul>
     <div id='stuff'>
       <div id="palette">
@@ -37,31 +38,65 @@
           <li id='othrLI'>Other</li>
         </ul>
         <div id="blocks">
+          <div class='txtb block'>text</div>
           <h1 id='textH1'>Text</h1>
-          <div class='text block'>block</div>
-          <div class='text block'>block</div>
+          <div class='text block'>paragraph</div>
+          <div class='text block'>heading 1</div>
+          <div class='text block'>heading 2</div>
+          <div class='text block'>heading 3</div>
+          <div class='text block'>heading 4</div>
+          <div class='text block'>heading 5</div>
+          <div class='text block'>heading 6</div>
+          <div class='text block'>horizontal line</div>
+          <div class='text block'>comment</div>
+          <div class='text block'>link</div>
+          <div class='text block'>span</div>
           <h1 id='frmtH1'>Formatting</h1>
-          <div class='frmt block'>block</div>
-          <div class='frmt block'>block</div>
+          <div class='frmt block'>bold</div>
+          <div class='frmt block'>italics</div>
+          <div class='frmt block'>underline</div>
+          <div class='frmt block'>strikethrough</div>
+          <div class='frmt block'>code</div>
+          <div class='frmt block'>superscript</div>
+          <div class='frmt block'>subscript</div>
           <h1 id='orgnH1'>Organisation</h1>
-          <div class='orgn block'>block</div>
-          <div class='orgn block'>block</div>
-          <div class='orgn block'>a long block that also shows there can be diff nums of blocks per section</div>
+          <div class='orgn block'>division</div>
+          <div class='orgn block'>header</div>
+          <div class='orgn block'>footer</div>
+          <div class='orgn block'>nav</div>
+          <div class='orgn block'>article</div>
+          <div class='orgn block'>section</div>
           <h1 id='frmsH1'>Forms and inputs</h1>
-          <div class='frms block'>block</div>
-          <div class='frms block'>block</div>
+          <div class='frms block'>form</div>
+          <div class='frms block'>input</div>
+          <div class='frms block'>textarea</div>
+          <div class='frms block'>button</div>
+          <div class='frms block'>select</div>
+          <div class='frms block'>option group</div>
+          <div class='frms block'>option</div>
           <h1 id='mdiaH1'>Media</h1>
-          <div class='mdia block'>block</div>
-          <div class='mdia block'>block</div>
+          <div class='mdia block'>image</div>
+          <div class='mdia block'>canvas</div>
+          <div class='mdia block'>audio</div>
+          <div class='mdia block'>video</div>
+          <div class='mdia block'>iframe</div>
           <h1 id='tbleH1'>Tables and Lists</h1>
-          <div class='tble block'>block</div>
-          <div class='tble block'>block</div>
+          <div class='tble block'>ordered list</div>
+          <div class='tble block'>unordered list</div>
+          <div class='tble block'>list item</div>
+          <div class='tble block'>table</div>
+          <div class='tble block'>table row</div>
+          <div class='tble block'>table heading</div>
+          <div class='tble block'>table cell</div>
           <h1 id='attrH1'>Attributes</h1>
-          <div class='attr block'>block</div>
-          <div class='attr block'>block</div>
+          <div class='attr block'>src</div>
+          <div class='attr block'>href</div>
+          <div class='attr block'>type</div>
+          <div class='attr block'>title</div>
+          <div class='attr block'>alt</div>
           <h1 id='othrH1'>Other</h1>
-          <div class='othr block'>block</div>
-          <div class='othr block'>block</div>
+          <div class='othr block'>link</div>
+          <div class='othr block'>script</div>
           <div id="blankScrollThingy"></div>
         </div>
       </div>
@@ -133,19 +168,50 @@
           }
         }
       };
-      document.querySelector('#scripts').addEventListener('contextmenu',function(e){
+      function contextMenu(e,lis) {
         if (!document.querySelector('.menu')) {
           var s=document.createElement('UL');
           s.className='menu';
-          s.innerHTML='<li>duplicate</li><li>delete</li><li>add text block</li>';
           s.onclick=function(e){
             // placeholder
             if (e.target.tagName=='LI') console.log(e.target.innerHTML);
           }
+          s.addEventListener('contextmenu',function(e){
+            contextMenu(e,'<li>stop right-clicking!</li>');
+            e.preventDefault();
+          },false);
           document.body.appendChild(s);
         }
+        document.querySelector('.menu').innerHTML=lis;
         document.querySelector('.menu').style.left=(e.clientX-5)+"px";
         document.querySelector('.menu').style.top=(e.clientY-5)+"px";
+      }
+      document.querySelector('#palette').addEventListener('contextmenu',function(e){
+        contextMenu(e,'<li>help</li>');
+        e.preventDefault();
+      },false);
+      document.querySelector('#scripts').addEventListener('contextmenu',function(e){
+        contextMenu(e,'<li>duplicate</li><li>delete</li><li>add text block</li><li>add comment</li><li>help</li>');
+        e.preventDefault();
+      },false);
+      document.querySelector('#files').addEventListener('contextmenu',function(e){
+        if (e.target.tagName=='LI'||e.target.tagName=='SPAN') {
+          if (e.target.id=='new'||e.target.parentNode.id=='new') contextMenu(e,'<li>upload files</li><li>help</li>');
+          else contextMenu(e,'<li>rename</li><li>duplicate</li><li>download</li><li>delete</li><li>help</li>');
+        }
+        else contextMenu(e,'<li>help</li>');
+        e.preventDefault();
+      },false);
+      document.querySelector('#title').addEventListener('contextmenu',function(e){
+        contextMenu(e,'<li>add title block</li><li>help</li>');
+        e.preventDefault();
+      },false);
+      document.querySelector('#refresh').addEventListener('contextmenu',function(e){
+        contextMenu(e,'<li>help</li>');
+        e.preventDefault();
+      },false);
+      document.querySelector('#fullscreen').addEventListener('contextmenu',function(e){
+        contextMenu(e,'<li>help</li>');
         e.preventDefault();
       },false);
       window.onclick=function(e){
