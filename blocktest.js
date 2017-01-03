@@ -108,7 +108,7 @@ function fitVal(elm,textarea) {
   var clone=document.createElement('span');
   clone.className='getTextLength';
   clone.innerHTML=elm.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/(?:\r\n|\r|\n)/g,'<br/>');
-  clone.style.fontSize=document.defaultView.getComputedStyle(elm).getPropertyValue('font-size');
+  clone.style.font=document.defaultView.getComputedStyle(elm).font;
   document.body.appendChild(clone);
   elm.style.width=(clone.offsetWidth+5)+'px';
   if (textarea) elm.style.height=(clone.offsetHeight)+'px';
@@ -125,7 +125,7 @@ function fit(elm) {
   }
   elms=elm.querySelectorAll('.c');
   for (var i=0;i<elms.length;i++) {
-    elms[i].children[2].style.width=(elms[i].children[0].offsetWidth-12)+'px';
+    // elms[i].children[2].style.width=(elms[i].children[0].offsetWidth-12)+'px';
     if (elms[i].children[1].children.length===0) elms[i].children[2].className+=' emptyCend';
   }
 }
@@ -148,18 +148,19 @@ function identify(scriptlevel,mode) {
   var mode;
   if (mode) {
     if (mode=='getThis') {
-      if (scriptlevel.length<2) return scripts[Number(scriptlevel[0])];
-      var tempScript=scripts[Number(scriptlevel[0])][Number(scriptlevel[1])+1];
+      scriptlevel=scriptlevel.map(x=>Number(x));
+      if (scriptlevel.length<2) return scripts[scriptlevel[0]];
+      var tempScript=scripts[scriptlevel[0]][scriptlevel[1]+1];
       for (var i=2;i<scriptlevel.length;i++) {
-        tempScript=tempScript.blocks[Number(scriptlevel[i])];
+        tempScript=tempScript.blocks[scriptlevel[i]];
       }
       return tempScript;
     }
   } else {
-    var levels=scriptlevel.split('-'),tempScript=scripts[Number(levels[0])][Number(levels[1])+1];
-    if (levels.length<2) return scripts[Number(levels[0])];
+    var levels=scriptlevel.split('-').map(x=>Number(x)),tempScript=scripts[levels[0]][levels[1]+1];
+    if (levels.length<2) return scripts[levels[0]];
     for (var i=2;i<levels.length;i++) {
-      tempScript=tempScript.blocks[Number(levels[i])];
+      tempScript=tempScript.blocks[levels[i]];
     }
     return tempScript;
   }
@@ -195,8 +196,7 @@ document.querySelector('#scripts').onmousedown=function(e){
   else if (e.target.id!='scripts'&&e.target.tagName!='INPUT') drag.targ=e.target;
   if (drag.targ) {
     drag.script=[identify(drag.targ.dataset.script)];
-    drag.levels=drag.targ.dataset.script.split('-');
-    for (var i=0;i<drag.levels.length;i++) drag.levels[i]=Number(drag.levels[i]);
+    drag.levels=drag.targ.dataset.script.split('-').map(x=>Number(x));
     drag.type=blocks[drag.script[0].tag].type;
 
     if (drag.levels.length>2) drag.siblings=identify(drag.levels.slice(0,-1),'getThis').blocks;
@@ -252,9 +252,9 @@ document.body.onmousemove=function(e){
       var all=document.querySelectorAll('.PLACEHOLDER');
       if (all.length>1) console.warn("THERE SHOULD ONLY BE ONE OF YOU.");
       for (var i=0;i<all.length;i++) {
-        var levels=all[i].dataset.script.split('-');
-        if (levels.length>2) identify(levels.slice(0,-1),'getThis').blocks.splice(Number(levels[levels.length-1]),1);
-        else identify(levels.slice(0,-1),'getThis').splice(Number(levels[levels.length-1])+1,1);
+        var levels=all[i].dataset.script.split('-').map(x=>Number(x));
+        if (levels.length>2) identify(levels.slice(0,-1),'getThis').blocks.splice(levels[levels.length-1],1);
+        else identify(levels.slice(0,-1),'getThis').splice(levels[levels.length-1]+1,1);
       }
       renderAll();
       fit(document);
@@ -267,24 +267,22 @@ document.body.onmousemove=function(e){
         //
       } else {
         try {
-          var newareaLevels=newarea.dataset.script.split('-'),
+          var newareaLevels=newarea.dataset.script.split('-').map(x=>Number(x)),
           newareaScript=identify(newareaLevels,'getThis'),
           newareaParent=identify(newareaLevels.slice(0,-1),'getThis');
           if (newareaLevels.length>2) newareaParent=newareaParent.blocks;
           if (newareaScript.blocks) {
             if (!document.querySelector('.PLACEHOLDER')) {
               newareaScript.blocks.push({tag:'PLACEHOLDER'});
-              console.log('Added placeholder');
             }
           } else {
-            newareaLevels[newareaLevels.length-1]=Number(newareaLevels[newareaLevels.length-1])+1;
+            newareaLevels[newareaLevels.length-1]=newareaLevels[newareaLevels.length-1]+1;
             if (newareaLevels.length<=2) newareaLevels[newareaLevels.length-1]++;
             var nextBlock=newareaParent[newareaLevels[newareaLevels.length-1]];
             while (nextBlock&&blocks[nextBlock.tag].type=='attr') {
               newareaLevels[newareaLevels.length-1]++;
               nextBlock=newareaParent[newareaLevels[newareaLevels.length-1]];
             }
-            console.log(newareaLevels[newareaLevels.length-1]);
             newareaParent.splice(newareaLevels[newareaLevels.length-1],0,{tag:'PLACEHOLDER'});
           }
         } catch (e) {
@@ -306,11 +304,11 @@ document.body.onmouseup=function(e){
     if (document.querySelector('.PLACEHOLDER')) {
       var all=document.querySelectorAll('.PLACEHOLDER');
       for (var i=0;i<all.length;i++) {
-        var levels=all[i].dataset.script.split('-'),blockz;
+        var levels=all[i].dataset.script.split('-').map(x=>Number(x)),blockz;
         if (levels.length>2) blockz=identify(levels.slice(0,-1),'getThis').blocks;
         else blockz=identify(levels.slice(0,-1),'getThis');
-        blockz.splice(Number(levels[levels.length-1])+1,1);
-        for (var j=drag.script.length-1;j>=0;j--) blockz.splice(Number(levels[levels.length-1])+1,0,drag.script[j]);
+        blockz.splice(levels[levels.length-1]+1,1);
+        for (var j=drag.script.length-1;j>=0;j--) blockz.splice(levels[levels.length-1]+1,0,drag.script[j]);
       }
     } else {
       drag.script.splice(0,0,[e.clientX-drag.offsetMX,e.clientY-drag.offsetMY]);
