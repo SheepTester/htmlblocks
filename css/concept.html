@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSS concept thing</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="weeeee"/>
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link rel="stylesheet" href="concept.css">
+  </head>
+  <body>
+    <actions>
+      <csslogo>CSS</csslogo>
+    </actions>
+    <editor>
+      <instructions class='closed'>
+        <h>instructions</h>
+        <p>Put the <c class="selector">span</c> in the <c class="selector">paragraph</c> in italics.</p>
+        <p>Hint: set <c class="rule">font style</c> to <c class="value">italic</c>.</p>
+      </instructions>
+      <element>
+        <selectors>
+          <selector>html<remove></remove></selector>
+          <selector>body<remove></remove></selector>
+          <selector>paragraph<remove></remove></selector>
+          <selector>span<remove></remove></selector>
+        </selectors>
+        <rules>
+          <rule><input type="checkbox" checked><rule>font style</rule><value class="dropdown">normal</value></rule>
+          <rule><input type="checkbox"><rule>text decoration</rule><value class="dropdown">underline</value></rule>
+          <rule><input type="checkbox" checked><rule>line height</rule><value contenteditable>1</value></rule>
+          <new>new rule</new>
+        </rules>
+      </element>
+      <new>new element</new>
+    </editor>
+    <iframecontainer><iframe></iframe></iframecontainer>
+
+    <script src="../../sheep.js"></script>
+    <script>
+      var framed=document.querySelector('iframe');
+      framed=(framed.contentWindow)?framed.contentWindow:(framed.contentDocument.document)?framed.contentDocument.document:framed.contentDocument;
+      framed=framed.document;
+      framed.open();
+      framed.appendChild(document.createElement("body"));
+      framed.querySelector('body').innerHTML='<p>style <span>me</span>!</p>';
+      framed.close();
+      document.querySelector('instructions h').onclick=e=>{
+        if (document.querySelector('instructions').classList.contains('closed')) document.querySelector('instructions').classList.remove('closed');
+        else document.querySelector('instructions').classList.add('closed');
+      };
+      var dropdowns={
+        "font style":['normal','italic','oblique'],
+        'text decoration':['none','underline','line-through']
+      };
+      document.querySelector('rules').onclick=e=>{
+        if (e.target.tagName==='VALUE') {
+          if (e.target.classList.contains('dropdown')) {
+            var values=dropdowns[e.target.previousSibling.textContent],drop=document.createElement("dropdown");
+            for (var i=0;i<values.length;i++) {
+              var s=document.createElement("value");
+              s.innerHTML=values[i];
+              drop.appendChild(s);
+            }
+            drop.style.left=(e.target.getBoundingClientRect().left-5)+"px";
+            drop.style.top=e.target.getBoundingClientRect().bottom+"px";
+            e.target.parentNode.appendChild(drop);
+            var dismiss=ev=>{
+              // if (!ev.target.classList.contains('dropdown')) {
+                if (ev.target.tagName==="VALUE") {
+                  e.target.innerHTML=ev.target.innerHTML;
+                }
+                e.target.parentNode.removeChild(drop);
+                document.body.removeEventListener("mousedown",dismiss,false);
+                document.body.removeEventListener("touchstart",dismiss,false);
+              // }
+            };
+            document.body.addEventListener("mousedown",dismiss,false);
+            document.body.addEventListener("touchstart",dismiss,false);
+          }
+        }
+      };
+    </script>
+  </body>
+  <!-- MADE BY SEAN -->
+</html>

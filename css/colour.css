@@ -1,0 +1,38 @@
+colours {
+  display: block;
+  position: fixed;
+  background: rgba(0,0,0,0.8);
+  height: 200px;
+  width: 200px;
+  line-height: 1;
+  color: white;
+  box-sizing: border-box;
+  padding: 5px;
+}
+colours list {
+  display: block;
+  height: 25px;
+  transition: all .5s;
+  background-color: rgba(0,0,0,0.2);
+  cursor: pointer;
+  padding: 5px;
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
+colours list.open {
+  height: 165px;
+  background-color: transparent;
+  cursor: auto;
+  overflow-y: auto;
+}
+colours h {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 5px;
+}
+colours colour {
+  text-shadow: 0 0 3px black;
+  display: block;
+  padding: 5px;
+  cursor: pointer;
+}

@@ -1,0 +1,235 @@
+body {
+  margin: 0;
+  line-height: 1;
+  font-family: 'Lato', sans-serif;
+  color: #666;
+  background-color: #eaeef1;
+}
+actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  background-color: #eaeef1;
+  height: 40px;
+  border-top: 1px solid #ced8de;
+  padding: 0 10px;
+  box-sizing: border-box;
+  margin-top: -1px;
+}
+csslogo {
+  display: inline-block;
+  font-size: 20px;
+  padding: 10px;
+  box-sizing: border-box;
+  height: 40px;
+  font-weight: bold;
+  color: #252f37;
+}
+editor {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 40px;
+  border-right: 1px solid #ced8de;
+  width: 250px;
+  box-sizing: border-box;
+}
+iframecontainer {
+  display: block;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 40px;
+  left: 250px;
+}
+iframe {
+  border: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+element {
+  display: block;
+  margin: 5px;
+}
+selectors {
+  display: block;
+  font-size: 0;
+}
+selector {
+  display: inline-block;
+  background-color: #94a8b8;
+  border-radius: 12.5px;
+  font-size: 15px;
+  padding: 5px;
+  padding-left: 10px;
+  color: #eaeef1;
+  cursor: pointer;
+  margin-left: 5px;
+  margin-bottom: 5px;
+}
+selector > remove {
+  display: inline-block;
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  background-color: #5e788d;
+  margin-left: 5px;
+  vertical-align: top;
+  font-size: 0;
+}
+selector > remove:hover, rules > rule > input[type=checkbox]:hover {
+  background-color: #546b7d;
+}
+selector > remove:active, rules > rule > input[type=checkbox]:active {
+  background-color: #435665;
+}
+rules {
+  display: block;
+  margin: 5px;
+  font-size: 15px;
+  overflow-x: auto;
+}
+rules > rule {
+  display: block;
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+rules > rule > input[type=checkbox] {
+  display: inline-block;
+  -webkit-appearance: none;
+  background-color: #5e788d;
+  height: 11px;
+  width: 11px;
+  vertical-align: top;
+  margin: 2px;
+  cursor: pointer;
+  margin-right: 5px;
+  position: relative;
+}
+rules > rule > input[type=checkbox]:checked::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 2px;
+  background-color: #a9b9c6;
+}
+rules > rule > input[type=checkbox]:checked:hover::after {opacity:0.5;}
+rules > rule > rule {
+  display: inline-block;
+  color: #91ad58;
+  margin-right: 5px;
+}
+rules > rule > value {
+  display: inline-block;
+  color: #c176b2;
+  white-space: pre;
+  min-width: 10px;
+}
+rules > rule > value.dropdown {
+  cursor: pointer;
+}
+rules > rule > value.dropdown:hover, rules > rule > value[contenteditable] {
+  background: rgba(0,0,0,0.05);
+}
+rules > rule > input[type=checkbox]:not(:checked)~*:not(dropdown) {
+  color: #c3a08d;
+  position: relative;
+}
+rules > rule > input[type=checkbox]:not(:checked)~*:not(dropdown)::after {
+  content: '';
+  position: absolute;
+  top: 55%;
+  left: -3px;
+  width: 100%;
+  padding: 0 3px;
+  border-bottom: 1.5px solid #c3a08d;
+}
+rules > new {
+  display: table;
+  height: 15px;
+  padding: 2px 5px;
+  margin-bottom: 5px;
+  background-color: rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+editor > new {
+  display: block;
+  height: 15px;
+  text-align: center;
+  margin: 0 5px;
+  padding: 2px 0;
+  background-color: rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+new:hover {
+  background-color: rgba(0,0,0,0.2);
+}
+new:active {
+  background-color: rgba(0,0,0,0.15);
+}
+instructions {
+  display: block;
+  margin: 10px;
+  overflow-y: hidden;
+  max-height: 100%;
+  transition: all .5s;
+}
+instructions.closed {
+  background-color: rgba(0,0,0,0.05);
+  max-height: 20px;
+}
+instructions.closed:hover {
+  background-color: rgba(0,0,0,0.1);
+}
+instructions.closed:active {
+  background-color: rgba(0,0,0,0.15);
+}
+instructions h {
+  display: block;
+  font-weight: bold;
+  font-size: 20px;
+  cursor: pointer;
+}
+instructions p {
+  margin: 0;
+  padding: 5px 0;
+}
+instructions c {
+  display: inline;
+  font-family: monospace;
+  background: rgba(0,0,0,0.05);
+}
+instructions c.selector {
+  color: #94a8b8;
+}
+instructions c.rule {
+  color: #91ad58;
+}
+instructions c.value {
+  color: #c176b2;
+}
+rules > rule > dropdown {
+  position: fixed;
+  display: block;
+  background-color: rgba(0,0,0,0.8);
+  z-index: 1;
+  color: #dae1e7;
+}
+rules > rule > dropdown > value {
+  display: block;
+  cursor: pointer;
+  padding: 2px 5px;
+}
+rules > rule > dropdown > value:hover {
+  background-color: rgba(255,255,255,0.1);
+}
