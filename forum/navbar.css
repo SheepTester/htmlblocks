@@ -1,0 +1,148 @@
+navbar {
+  display: block;
+  position: fixed;
+  bottom: 0;
+  width: 0;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background-color: #1C1E26;
+  color: white;
+  /*box-shadow: inset 0 0 3px rgba(0,0,0,0.3);*/
+  z-index: 100;
+  transition: width .2s;
+}
+navbar navbtn {
+  display: block;
+  position: absolute;
+  bottom: 0;
+  right: 100%;
+  height: 30px;
+  width: 30px;
+  margin: 5px;
+  background: rgba(0,0,0,0.8);
+  background-image: url('menu.svg');
+  background-size: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+body:not(.SIDEBARISOPENWOW) sheepmenu {
+  right: -100%;
+  pointer-events: none;
+}
+body.SIDEBARISOPENWOW navbar {
+  width: 250px;
+}
+body.SIDEBARISOPENWOW navbar navbtn {
+  opacity: 0;
+  pointer-events: none;
+}
+navbar logo {
+  font-size: 30px;
+  padding: 10px;
+  display: block;
+  font-weight: bold;
+  user-select: none;
+  text-align: center;
+  cursor: pointer;
+}
+navbar logo:hover, navbar user:hover, navbar > a:hover {
+  background-color: rgba(255,255,255,0.02);
+}
+navbar input {
+  width: 100%;
+  height: 35px;
+  background-color: transparent;
+  border: none;
+  color: rgba(255,255,255,0.8);
+  padding: 10px;
+  font-size: 15px;
+  box-sizing: border-box;
+  text-align: center;
+}
+navbar input:focus {
+  background-color: rgba(255,255,255,0.1);
+  color: white;
+}
+navbar input::-webkit-input-placeholder {
+  color: rgba(255,255,255,0.5);
+}
+navbar div {
+  display: block;
+  background-color: #262830;
+  padding: 0;
+  transition: max-height .2s, padding .2s;
+  position: relative;
+  max-height: 0;
+  overflow: hidden;
+}
+navbar div a {
+  text-decoration: none;
+  color: white;
+  display: block;
+  padding: 10px;
+  transition: padding .2s;
+}
+navbar div a:not(.active):hover {
+  padding-left: 15px;
+}
+navbar div a.active {
+  background-color: rgba(255,255,255,0.1);
+  cursor: default;
+}
+navbar div.active {
+  max-height: 50%;
+  padding: 5px 0;
+  overflow: visible;
+}
+navbar div::before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 0;
+  height: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  top: -10px;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 0 solid #262830;
+}
+navbar div.active::before {
+  border-bottom-width: 10px;
+}
+navbar user {
+  display: block;
+  vertical-align: middle;
+  cursor: pointer;
+  text-align: center;
+}
+navbar user img {
+  height: 40px;
+  width: 40px;
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+}
+navbar > a {
+  display: block;
+  text-decoration: none;
+  color: white;
+  padding: 5px 15px;
+  box-sizing: border-box;
+  height: 30px;
+  font-size: 20px;
+}
+navbar > a::before {
+  content: '/';
+  color: rgba(255,255,255,0.6);
+}
+navbar > a:first-of-type {
+  margin-top: 10px;
+}
+navbar > a:last-of-type {
+  margin-bottom: 10px;
+}

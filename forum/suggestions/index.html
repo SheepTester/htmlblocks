@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hyperblocks Forums</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="forum index page"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="../forum.css">
+    <link rel="stylesheet" href="../navbar.css">
+  </head>
+  <body>
+    <navbar>
+      <navbtn></navbtn>
+      <input type="text" id='searchbar' placeholder="search">
+      <logo>HYPERBLOCKS</logo>
+      <div class='navLOGO'>
+        <a href="#">home</a>
+        <a href="#">make</a>
+        <a href="#">find</a>
+        <a href="#" class='active'>talk</a>
+        <a href="#">what</a>
+        <a href="#">help</a>
+      </div>
+      <a href="../">forum</a>
+      <a href="">suggestions</a>
+      <user><img src="../profilepicture.png" alt="wow!"> awesomeminecraft54</user>
+      <div class='navUSER'>
+        <a href="#">profile</a>
+        <a href="#">my stuff</a>
+        <a href="#">messages</a>
+        <a href="#">settings</a>
+        <a href="#">sign out</a>
+      </div>
+    </navbar>
+    <div class="container">
+      <input type="text" placeholder="search" id='search'>
+      <forum>
+        <h>suggestions</h>
+      </forum>
+      <forum class='settings' id='thisIsSupposedToLinkToSomewhereLikeSettingsButIDidntBother'>
+        <a href="#thisIsSupposedToLinkToSomewhereLikeSettingsButIDidntBother">my topics</a>
+        <a href="#thisIsSupposedToLinkToSomewhereLikeSettingsButIDidntBother">my posts</a>
+        <a href="#thisIsSupposedToLinkToSomewhereLikeSettingsButIDidntBother">signature</a>
+      </forum>
+    </div>
+
+    <script src="../../../sheep.js"></script>
+    <script src='../navbar.js'></script>
+    <script>
+      function word(from,to) {
+        var r='',len=Math.floor(Math.random()*(to-from+1)+from);
+        for (var i=0;i<len;i++) r+=Math.floor(Math.random()*4)?String.fromCharCode(Math.floor(Math.random()*26+97)):' ';
+        return r;
+      }
+      var s='';
+      for (var i=0;i<5;i++) s+=`<topic class='pin ${Math.floor(Math.random()*2)?'unread':''}'><inf><a href="../topic">${word(10,25)}</a> <a href="#" class='user'>${word(3,7)}</a></inf><inf><a href="../topic">see most recent reply</a></inf><inf class='replyCount'>${Math.floor(Math.random()*1000)}</inf></topic>`;
+      for (var i=0;i<20;i++) s+=`<topic class='${Math.floor(Math.random()*2)?'unread':''}'><inf><a href="../topic">${word(10,25)}</a> <a href="#" class='user'>${word(3,7)}</a></inf><inf><a href="../topic">see most recent reply</a></inf><inf class='replyCount'>${Math.floor(Math.random()*1000)}</inf></topic>`;
+      document.querySelector('forum').innerHTML+=s;
+    </script>
+  </body>
+  <!-- MADE BY SEAN -->
+</html>

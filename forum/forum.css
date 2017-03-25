@@ -1,0 +1,230 @@
+html, body, div.container {
+  height: 100%;
+  width: 100%;
+}
+body {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+  line-height: 1;
+  font-size: 15px;
+  background-color: black;
+}
+:focus {
+  box-shadow: 0 0 0 2px rgba(255,0,0,0.2);
+}
+div.container {
+  /*background-color: #EFE1E1;*/
+  background-color: #e3e3e3;
+  color: #231A1A;
+  transition: all .2s;
+  overflow: auto;
+  position: absolute;
+  right: 0;
+  opacity: 1;
+}
+h1 {
+  font-size: 20vh;
+  text-align: center;
+  margin: 0;
+  color: white;
+  background-color: #CC6666;
+  padding: 5vh 0;
+}
+body.SIDEBARISOPENWOW > div.container {
+  position: absolute;
+  right: 250px;
+  opacity: 0.5;
+  cursor: pointer;
+  user-select: none;
+  filter: grayscale(1);
+}
+body.SIDEBARISOPENWOW > div.container * {
+  pointer-events: none;
+}
+forum {
+  display: block;
+  margin: 30px 10vw;
+  width: calc(100% - 20vw);
+  box-sizing: border-box;
+  padding: 25px;
+  background: white;
+}
+forum h {
+  display: block;
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+forum h::before, forum h::after {
+  content: '';
+  display: inline-block;
+  vertical-align: middle;
+  width: 80px;
+  height: 2px;
+  background-color: #CC6666;
+  margin: 0 30px;
+}
+@media (max-width: 530px) {
+  forum {
+    width: 100%;
+    margin: 30px 0;
+  }
+  forum h {
+    background-color: #CC6666;
+    color: white;
+    padding: 5px;
+  }
+  forum h::before, forum h::after {
+    display: none;
+  }
+}
+forum subforum {
+  display: block;
+}
+forum subforum a {
+  display: inline-block;
+  text-decoration: none;
+  color: #CC6666;
+  font-size: 20px;
+  padding-right: 5px;
+}
+forum inf {
+  display: inline-block;
+  padding: 0 5px;
+}
+forum inf.topicCount::after {
+  content: ' topics';
+  opacity: 0.6;
+}
+forum inf.postCount::after {
+  content: ' posts';
+  opacity: 0.6;
+}
+forum inf.replyCount::after {
+  content: ' replies';
+  opacity: 0.6;
+}
+forum.settings {
+  display: flex;
+  margin-bottom: 0;
+}
+forum.settings a {
+  flex-basis: 0;
+  flex-grow: 1;
+  text-decoration: none;
+  color: #CC6666;
+  text-align: center;
+}
+h1 input {
+  border: none;
+  display: block;
+  font-size: 2.5vh;
+  padding: 1vh 0;
+  margin: 0 20vw;
+  margin-top: 2vh;
+  width: calc(100% - 40vw);
+  background-color: rgba(0,0,0,0.2);
+  text-align: center;
+  font-weight: normal;
+  color: rgba(255,255,255,0.7);
+}
+h1 input:focus {
+  background-color: rgba(0,0,0,0.4);
+  color: white;
+}
+div.container > input {
+  width: 100%;
+  display: block;
+  font-size: 1vh;
+  padding: 0;
+  background-color: #CC6666;
+  border: none;
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  transition: all .5s;
+  cursor: pointer;
+}
+div.container > input:focus {
+  color: white;
+  font-size: 3vh;
+  padding: 1vh 0;
+  cursor: auto;
+}
+div.container > input::-webkit-input-placeholder {
+  color: transparent;
+  transiton: color .5s;
+}
+h1 input::-webkit-input-placeholder, div.container > input:focus::-webkit-input-placeholder {
+  color: rgba(255,255,255,0.5);
+}
+forum topic {
+  display: block;
+  white-space: nowrap;
+}
+forum topic:nth-child(odd) {
+  background-color: rgba(0,0,0,0.02);
+}
+forum topic.unread {
+  font-weight: bold;
+}
+forum topic::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-bottom: 2px;
+  margin-right: 5px;
+}
+forum topic.pin {
+  font-size: 20px;
+  margin: 5px 0;
+}
+forum topic.pin inf:first-of-type a:first-of-type {
+  font-size: 25px;
+}
+forum topic.pin::before {
+  background-image: url('pin.svg');
+  background-size: 12px;
+  background-position: center;
+}
+forum topic.unread:not(.pin)::before {
+  border-radius: 50%;
+  background-color: #CC6666;
+  width: 5px;
+  height: 5px;
+  margin: 2.5px;
+  margin-bottom: 4.5px;
+  margin-right: 7.5px;
+}
+forum topic a {
+  text-decoration: none;
+  color: #CC6666;
+}
+forum topic a:hover {
+  background-color: rgba(0,0,0,0.05);
+}
+forum topic a.user::before {
+  content: 'by ';
+  color: rgba(0,0,0,0.6);
+}
+forum topic inf:first-of-type {
+  padding-left: 0;
+  white-space: normal;
+}
+forum topic inf:first-of-type a:first-of-type {
+  font-size: 20px;
+}
+forum topic inf:not(:first-of-type) {
+  float: right;
+}
+@media (max-width: 460px) {
+  h1 {
+    font-size: 25vw;
+    padding: 3vh 0;
+  }
+  h1 input {
+    margin: 2vh;
+    margin-bottom: 0;
+    width: calc(100% - 4vh);
+  }
+}
