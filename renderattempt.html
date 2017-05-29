@@ -110,6 +110,10 @@
   </head>
   <body>
     <div id="workspace"></div>
+    <button onclick="script=new Script(workspace);t=new Block('stack','img',{colour:'#9B6ABD'});script.addchild(t);script=t=null;">New stack block</button>
+    <button onclick="script=new Script(workspace);t=new Block('text','Insert text here');script.addchild(t);script=t=null;">New text block</button>
+    <button onclick="script=new Script(workspace);t=new Block('c','h1',{colour:'#6ABC88'});script.addchild(t);script=t=null;">New C block</button>
+    <button onclick="script=new Script(workspace,{attrscript:true});t=new Block('attr','class',{colour:'#6AB6BC'});script.addchild(t);script=t=null;">New attribute block</button>
 
     <script src="../sheep.js"></script>
     <script src="testblock.js" charset="utf-8"></script>
@@ -132,6 +136,7 @@ c.addattr(attr);
 script.x=30;
 script.y=50;
 script=null;
+var t=null;
     </script>
   </body>
   <!-- MADE BY SEAN -->

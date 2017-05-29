@@ -44,7 +44,7 @@ class Block {
         this.textdisplay=document.createElement("span");
         this.textdisplay.classList.add('blocks');
         this.textdisplay.classList.add('blocks-label');
-        this.textdisplay.innerHTML=Block.addEntities(label+'\b');
+        this.textdisplay.innerHTML=Block.addEntities(label+'\u200b');
         this.textdisplay.style.top='7px';
         this.textdisplay.style.left='7px';
         this.wrapper.appendChild(this.back);
@@ -131,11 +131,13 @@ class Block {
       if (!this.moving) {
         var mouse={initX:e.clientX,initY:e.clientY};
         var mousemove=e=>{
-          if (!this.moving&&Math.abs(mouse.initX-e.clientX)<3&&Math.abs(mouse.initY-e.clientY)<3) {
+          if (!this.moving&&Math.abs(mouse.initX-e.clientX)>1&&Math.abs(mouse.initY-e.clientY)>1) {
             this.moving=true;
             var t=this.parent?this.parent:false;
             if (this.type==='attr') {
-              Script.attrdragger.d={x:e.clientX-this.back.getBoundingClientRect().left,y:e.clientY-this.back.getBoundingClientRect().top};
+              Script.attrdragger.d={x:mouse.initX-this.back.getBoundingClientRect().left,y:mouse.initY-this.back.getBoundingClientRect().top};
+              Script.attrdragger.x=this.back.getBoundingClientRect().left;
+              Script.attrdragger.y=this.back.getBoundingClientRect().top;
               Script.attrdragger.addchild(this);
               if (t) {
                 if (t[0].attrs) {
@@ -151,7 +153,9 @@ class Block {
                 }
               }
             } else {
-              Script.dragger.d={x:e.clientX-this.back.getBoundingClientRect().left,y:e.clientY-this.back.getBoundingClientRect().top};
+              Script.dragger.d={x:mouse.initX-this.back.getBoundingClientRect().left,y:mouse.initY-this.back.getBoundingClientRect().top};
+              Script.dragger.x=this.back.getBoundingClientRect().left;
+              Script.dragger.y=this.back.getBoundingClientRect().top;
               Script.dragger.addchild(this);
               if (t) for (var i=t[1];t[0].children&&i<t[0].children.length;) {
                 t[0].children[i].moving=true;
@@ -161,12 +165,13 @@ class Block {
           }
         },mouseup=e=>{
           if (!this.moving) this.focus();
-          this.back.removeEventListener("mousemove",mousemove,false);
-          this.back.removeEventListener("mouseup",mouseup,false);
+          document.removeEventListener("mousemove",mousemove,false);
+          document.removeEventListener("mouseup",mouseup,false);
         };
-        this.back.addEventListener("mousemove",mousemove,false);
-        this.back.addEventListener("mouseup",mouseup,false);
+        document.addEventListener("mousemove",mousemove,false);
+        document.addEventListener("mouseup",mouseup,false);
       }
+      e.preventDefault();
     },false);
     this.x=options.x||0;
     this.y=options.y||0;
@@ -174,12 +179,12 @@ class Block {
   get x() {return this._x;}
   set x(x) {
     this._x=x;
-    this.wrapper.style.left=this._x+'px';
+    this.wrapper.style.transform=`translate(${this._x}px,${this._y}px)`;
   }
   get y() {return this._y;}
   set y(y) {
     this._y=y;
-    this.wrapper.style.top=this._y+'px';
+    this.wrapper.style.transform=`translate(${this._x}px,${this._y}px)`;
   }
   get visualwidth() {
     if (this.type==='c') return this.back.clientWidth;
@@ -189,7 +194,7 @@ class Block {
     if (this.type==='c') return this.back.clientHeight;
     else return this.back.clientHeight+4;
   }
-  updateback() {
+  updateback(dummyinnerheight=false) {
     switch (this.type) {
       case 'stack':
         this.back.style.width=(this.label.clientWidth+14)+'px';
@@ -204,12 +209,13 @@ class Block {
       case 'c':
         this.back.setAttributeNS(null,'width',this.label.clientWidth+14);
         this.attrwrapper.style.left=(this.label.clientWidth+14)+'px';
-        if (this.children.length===0) {
+        if (this.children.length===0&&!dummyinnerheight) {
           this.back.setAttributeNS(null,'height',30);
           this.backpath.setAttributeNS(null,'d',`M0 0H${this.label.clientWidth+14}V30H0z`);
         } else {
           var innerheight=0,j=0;
-          for (var i of this.children) i.y=innerheight,innerheight+=i.visualheight,i.parent[1]=j,j++;
+          if (dummyinnerheight) innerheight=dummyinnerheight;
+          else for (var i of this.children) i.y=innerheight,innerheight+=i.visualheight,i.parent[1]=j,j++;
           this.back.setAttributeNS(null,'height',this.label.clientHeight+34+innerheight);
           this.backpath.setAttributeNS(null,'d',`M0 0H${this.label.clientWidth+14}V30H15v${innerheight}H${this.label.clientWidth+14}v20H0z`);
         }
@@ -241,7 +247,7 @@ class Block {
       this.textbox.style.display='block';
       this.textbox.focus();
       var oninput=()=>{
-        this.textdisplay.innerHTML=Block.addEntities(this.textbox.value+'\b');
+        this.textdisplay.innerHTML=Block.addEntities(this.textbox.value+'\u200b');
         this.updateback();
       },onblur=()=>{
         this.textbox.removeEventListener("input",oninput,false);
@@ -257,7 +263,7 @@ class Block {
       this.input.style.display='block';
       this.input.focus();
       var oninput=()=>{
-        this.textdisplay.innerHTML=Block.addEntities(this.input.value+'\b');
+        this.textdisplay.innerHTML=Block.addEntities(this.input.value+'\u200b');
         this.updateback();
       },onblur=()=>{
         this.input.removeEventListener("input",oninput,false);
@@ -297,7 +303,7 @@ class Block {
   }
   addattr(block,index=-1) {
     if ((this.type==='c'||this.type==='stack')&&block.type==='attr') {
-      if (block.parent) block.parent[0].removeattr(block);
+      if (block.parent) block.parent[0] instanceof Script?block.parent[0].removechild(block):block.parent[0].removeattr(block);
       block.y=0;
       if (~index&&this.attrs.length<index) {
         this.attrs.splice(index,0,block);
@@ -330,42 +336,81 @@ class Block {
       insertblocks=(blocks,to,index=-1)=>{
         var t=[to.wrapper.parentNode,to.x,to.y];
         if (blocks[0].type==='c'&&blocks[0].children.length===0&&~index)
-          for (var i=index;to.children&&i<to.children.length;) blocks[0].addchild(to.children[i],index);
-        if (to.children) for (var i=blocks.length-1;i>=0;i--) {
-          blocks[i].moving=false;
-          to.addchild(blocks[i],index);
+          for (var i=index;to.children&&i<to.children.length;) blocks[0].addchild(to.children[i]);
+        if (to.children) {
+          if (index===0&&to instanceof Script) t=to.visualheight;
+          else if (!~index) index=to.children.length;
+          for (var i=blocks.length-1;i>=0;i--) {
+            blocks[i].moving=false;
+            to.addchild(blocks[i],index);
+          }
+          if (index===0&&to instanceof Script) to.y-=to.visualheight-t;
         } else {
           t=new Script(t[0],{x:t[1],y:t[2]});
           for (var i=0;i<blocks.length;i++) {
             blocks[i].moving=false;
             t.addchild(blocks[i]);
           }
+          if (index===0&&to instanceof Script) t.x-=15,t.y-=30;
         }
       },
       otherinfo=[
-        this.parent[1]===this.parent[0].children.length, // last child?
+        this.parent[1]===this.parent[0].children.length-1, // last child?
         this.parent[0] instanceof Script? // how high?
-          this.parent[0].children[this.parent[0].children.length-1].y+this.parent[0].children[this.parent[0].children.length-1].visualheight-this.y:
-          this.parent[0].visualheight-this.y-20
-      ];
+          this.parent[0].children[this.parent[0].children.length-1].y+this.parent[0].children[this.parent[0].children.length-1].visualheight-this.y-this.visualheight:
+          this.parent[0].visualheight-this.y-this.visualheight-50
+      ],
+      beforeheight=[false,otherinfo[1]+this.visualheight];
       switch (this.type) {
         case 'stack':
         case 'text':
-          hitboxes.push(new Hitbox(back.left-15,back.top,back.left+back.width,back.top+back.height/2,[back.left,back.top,...otherinfo],blocks=>insertblocks(blocks,this.parent[0],this.parent[1])));
+          hitboxes.push(new Hitbox(back.left-15,back.top,back.left+back.width,back.top+back.height/2,[back.left,back.top,...beforeheight],blocks=>insertblocks(blocks,this.parent[0],this.parent[1])));
           hitboxes.push(new Hitbox(back.left-15,back.top+back.height,back.left+back.width,back.top+back.height/2,[back.left,back.top+back.height,...otherinfo],blocks=>insertblocks(blocks,this.parent[0],this.parent[1]+1)));
           break;
         case 'c':
           if (this.children.length) {
             for (var i of this.children) hitboxes.push(...i.hitboxes);
-            hitboxes.push(new Hitbox(back.left-15,back.top,back.left+back.width,back.top+15,[back.left,back.top,...otherinfo],blocks=>insertblocks(blocks,this.parent[0],this.parent[1])));
-            hitboxes.push(new Hitbox(back.left-15,back.top+30,back.left+back.width,back.top+15,[back.left+15,back.top+30,...otherinfo],blocks=>insertblocks(blocks,this,0)));
-            hitboxes.push(new Hitbox(back.left-15,back.top+back.height-20,back.left+back.width,back.top+back.height-10,[back.left+15,back.top+back.height-20,...otherinfo],blocks=>insertblocks(blocks,this)));
+            hitboxes.push(new Hitbox(back.left-15,back.top,back.left+back.width,back.top+15,[back.left,back.top,...beforeheight],blocks=>insertblocks(blocks,this.parent[0],this.parent[1])));
+            hitboxes.push(new Hitbox(back.left-15,back.top+30,back.left+back.width,back.top+15,[back.left+15,back.top+30,false,back.height-50],blocks=>insertblocks(blocks,this,0)));
+            hitboxes.push(new Hitbox(back.left-15,back.top+back.height-20,back.left+back.width,back.top+back.height-10,[back.left+15,back.top+back.height-20,true],blocks=>insertblocks(blocks,this)));
             hitboxes.push(new Hitbox(back.left-15,back.top+back.height,back.left+back.width,back.top+back.height-10,[back.left,back.top+back.height,...otherinfo],blocks=>insertblocks(blocks,this.parent[0],this.parent[1]+1)));
           } else {
-            hitboxes.push(new Hitbox(back.left-15,back.top,back.left+back.width,back.top+back.height/3,[back.left,back.top,...otherinfo],blocks=>insertblocks(blocks,this.parent[0],this.parent[1])));
+            hitboxes.push(new Hitbox(back.left-15,back.top,back.left+back.width,back.top+back.height/3,[back.left,back.top,...beforeheight],blocks=>insertblocks(blocks,this.parent[0],this.parent[1])));
             hitboxes.push(new Hitbox(back.left-15,back.top+back.height,back.left+back.width,back.top+back.height/1.5,[back.left,back.top+back.height,...otherinfo],blocks=>insertblocks(blocks,this.parent[0],this.parent[1]+1)));
-            hitboxes.push(new Hitbox(back.left-15,back.top+back.height/1.5,back.left+back.width,back.top+back.height/3,[back.left+15,back.top+back.height/2,...otherinfo],blocks=>insertblocks(blocks,this)));
+            hitboxes.push(new Hitbox(back.left-15,back.top+back.height/1.5,back.left+back.width,back.top+back.height/3,[back.left+15,back.top+back.height/2,true],blocks=>insertblocks(blocks,this)));
           }
+          break;
+      }
+      return hitboxes;
+    } else return [];
+  }
+  get attrhitboxes() {
+    if (this.parent||this.type!=='text') {
+      var hitboxes=[],
+      back=this.back.getBoundingClientRect();
+      switch (this.type) {
+        case 'c':
+          for (var i of this.children) hitboxes.push(...i.attrhitboxes);
+        case 'stack':
+          for (var i=this.attrs.length-1;i>=0;i--) hitboxes.push(...this.attrs[i].attrhitboxes);
+          hitboxes.push(new Hitbox(back.left+back.width/2,back.top,back.left+back.width*1.5,back.top+30,[back.left+back.width,back.top],attrs=>{
+            for (var i=attrs.length-1;i>=0;i--) {
+              attrs[i].moving=false;
+              this.addattr(attrs[i],0);
+            }
+          }));
+          break;
+        case 'attr':
+          hitboxes.push(new Hitbox(back.left+back.width/2,back.top,back.left+back.width*1.5,back.top+30,[back.left+back.width,back.top],attrs=>{
+            if (this.parent[0] instanceof Script) for (var i=attrs.length-1;i>=0;i--) {
+              attrs[i].moving=false;
+              this.parent[0].addchild(attrs[i],this.parent[1]+1);
+            }
+            else for (var i=attrs.length-1;i>=0;i--) {
+              attrs[i].moving=false;
+              this.parent[0].addattr(attrs[i],this.parent[1]+1);
+            }
+          }));
           break;
       }
       return hitboxes;
