@@ -28,6 +28,7 @@ class Block {
     this.wrapper.classList.add('blocks');
     this.wrapper.classList.add('blocks-blockwrapper');
     this.type=type.toLowerCase();
+    this.undeletable=!!options.dontdelete;
     switch (this.type) {
       case 'text':
         this.back=document.createElement("div");
@@ -127,28 +128,38 @@ class Block {
         this.wrapper.appendChild(this.attrwrapper);
         this.attrs=[];
     }
-    this.back.addEventListener("mousedown",e=>{
+    var mousedown=(e,istouch)=>{
       if (!this.moving) {
-        var mouse={initX:e.clientX,initY:e.clientY};
+        var mouse;
+        if (istouch) mouse={initX:e.touches[0].clientX,initY:e.touches[0].clientY};
+        else mouse={initX:e.clientX,initY:e.clientY};
         var mousemove=e=>{
-          if (!this.moving&&Math.abs(mouse.initX-e.clientX)>1&&Math.abs(mouse.initY-e.clientY)>1) {
+          if (!this.moving&&Math.abs(mouse.initX-(istouch?e.touches[0].clientX:e.clientX))>1&&Math.abs(mouse.initY-(istouch?e.touches[0].clientY:e.clientY))>1) {
             this.moving=true;
             var t=this.parent?this.parent:false;
             if (this.type==='attr') {
               Script.attrdragger.d={x:mouse.initX-this.back.getBoundingClientRect().left,y:mouse.initY-this.back.getBoundingClientRect().top};
               Script.attrdragger.x=this.back.getBoundingClientRect().left;
               Script.attrdragger.y=this.back.getBoundingClientRect().top;
-              Script.attrdragger.addchild(this);
-              if (t) {
-                if (t[0].attrs) {
-                  for (var i=t[1];t[0].attrs&&i<t[0].attrs.length;) {
-                    t[0].attrs[i].moving=true;
-                    Script.attrdragger.addchild(t[0].attrs[i]);
-                  }
-                } else {
-                  for (var i=t[1];t[0].children&&i<t[0].children.length;) {
-                    t[0].children[i].moving=true;
-                    Script.attrdragger.addchild(t[0].children[i]);
+              if (options.copy) {
+                options.copy=false;
+                var t=new Block(type,label,Object.assign({},options));
+                t.input.value=this.input.value;
+                Script.attrdragger.addchild(t);
+                options.copy=true;
+              } else {
+                Script.attrdragger.addchild(this);
+                if (t) {
+                  if (t[0].attrs) {
+                    for (var i=t[1];t[0].attrs&&i<t[0].attrs.length;) {
+                      t[0].attrs[i].moving=true;
+                      Script.attrdragger.addchild(t[0].attrs[i]);
+                    }
+                  } else {
+                    for (var i=t[1];t[0].children&&i<t[0].children.length;) {
+                      t[0].children[i].moving=true;
+                      Script.attrdragger.addchild(t[0].children[i]);
+                    }
                   }
                 }
               }
@@ -156,23 +167,45 @@ class Block {
               Script.dragger.d={x:mouse.initX-this.back.getBoundingClientRect().left,y:mouse.initY-this.back.getBoundingClientRect().top};
               Script.dragger.x=this.back.getBoundingClientRect().left;
               Script.dragger.y=this.back.getBoundingClientRect().top;
-              Script.dragger.addchild(this);
-              if (t) for (var i=t[1];t[0].children&&i<t[0].children.length;) {
-                t[0].children[i].moving=true;
-                Script.dragger.addchild(t[0].children[i]);
+              if (options.copy) {
+                options.copy=false;
+                var t=new Block(type,label,Object.assign({},options));
+                if (type==='text') t.textbox.value=this.textbox.value,t.textdisplay.innerHTML=Block.addEntities((t.textbox.value||'')+'\b');
+                Script.dragger.addchild(t);
+                options.copy=true;
+              } else {
+                Script.dragger.addchild(this);
+                if (t) for (var i=t[1];t[0].children&&i<t[0].children.length;) {
+                  t[0].children[i].moving=true;
+                  Script.dragger.addchild(t[0].children[i]);
+                }
               }
             }
           }
+          e.preventDefault();
         },mouseup=e=>{
           if (!this.moving) this.focus();
-          document.removeEventListener("mousemove",mousemove,false);
-          document.removeEventListener("mouseup",mouseup,false);
+          if (istouch) {
+            document.removeEventListener("touchmove",mousemove,{passive:false});
+            document.removeEventListener("touchend",mouseup,{passive:false});
+          } else {
+            document.removeEventListener("mousemove",mousemove,false);
+            document.removeEventListener("mouseup",mouseup,false);
+          }
+          if (options.copy) this.moving=false;
         };
-        document.addEventListener("mousemove",mousemove,false);
-        document.addEventListener("mouseup",mouseup,false);
+        if (istouch) {
+          document.addEventListener("touchmove",mousemove,{passive:false});
+          document.addEventListener("touchend",mouseup,{passive:false});
+        } else {
+          document.addEventListener("mousemove",mousemove,false);
+          document.addEventListener("mouseup",mouseup,false);
+        }
       }
       e.preventDefault();
-    },false);
+    };
+    this.back.addEventListener("touchstart",e=>mousedown(e,true),{passive:false});
+    this.back.addEventListener("mousedown",e=>mousedown(e,false),false);
     this.x=options.x||0;
     this.y=options.y||0;
   }
@@ -415,5 +448,22 @@ class Block {
       }
       return hitboxes;
     } else return [];
+  }
+  get json() {
+    switch (this.type) {
+      case 'text':
+        return ['__TEXT__',this.textbox.value];
+      case 'attr':
+        return [this.label.textContent,this.input.value];
+      case 'stack':
+        var r=[];
+        for (var i of this.attrs) r.push(i.json);
+        return [this.label.textContent,r];
+      case 'c':
+      var r=[],t=[];
+      for (var i of this.attrs) r.push(i.json);
+      for (var i of this.children) t.push(i.json);
+      return [this.label.textContent,r,t];
+    }
   }
 }

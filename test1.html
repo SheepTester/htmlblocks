@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hyperblocks Test 1</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="Using the somewhat successful drag test attempt 3..."/>
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link rel="stylesheet" href="blocks.css">
+    <style>
+      html {
+        height: 100%;
+        width: 100%;
+      }
+      body {
+        margin: 0;
+        background: #222;
+        height: 100%;
+        width: 100%;
+        color: white;
+        font-family: 'Lato', sans-serif;
+        font-size: 15px;
+      }
+      #bar {
+        margin: 0;
+        padding: 0 10px;
+        position: fixed;
+        bottom: 0;
+        background: #CC6666;
+        width: 100%;
+        font-size: 0;
+        height: 40px;
+      }
+      #bar > li {
+        display: inline-block;
+        padding: 10px 10px;
+        transition: background .2s;
+        font-size: 20px;
+        line-height: 1;
+      }
+      #logo {
+        font-weight: bold;
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: default;
+      }
+      .btn {
+        cursor: pointer;
+        position: relative;
+      }
+      .btn:hover {
+        background: #804040;
+      }
+      .btn > ul {
+        max-height: 0;
+        overflow: hidden;
+        padding: 0 5px;
+        position: absolute;
+        bottom: 40px;
+        left: -5px;
+        list-style: none;
+        background: rgba(255, 255, 255, 0.8);
+        color: rgba(0, 0, 0, 0.8);
+        transition: padding .2s, max-height .2s;
+      }
+      .btn:hover > ul {
+        padding: 5px;
+        max-height: 100vh;
+      }
+      .btn > ul li {
+        padding: 5px;
+      }
+      .btn > ul li:hover {
+        background: rgba(0,0,0,0.1);
+      }
+      #stuff {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        padding-bottom: 40px;
+        box-sizing: border-box;
+      }
+      #stuff > div {
+        height: 100%;
+      }
+      #palette {
+        width: 200px;
+        background: #282828;
+        float: left;
+        display: flex;
+        flex-direction: column;
+      }
+      #scripts {
+        width: auto;
+        overflow: auto;
+        position: relative;
+      }
+      #otherstuff {
+        width: 400px;
+        background: #282828;
+        float: right;
+        display: flex;
+        flex-direction: column;
+      }
+      #stage {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: white;
+        cursor: pointer;
+      }
+      .menu {
+        position: fixed;
+        background: rgba(255,255,255,0.8);
+        color: rgba(0,0,0,0.8);
+        margin: 0;
+        padding: 5px;
+        list-style: none;
+        font-size: 15px;
+      }
+      .menu li {
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .menu li:hover {
+        background: rgba(0,0,0,0.1);
+      }
+      #sections {
+        background: #333;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      #sections li {
+        height: 20px;
+        padding: 1px 10px;
+        border-left: 2px solid transparent;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #sections li:not(.active):hover {
+        background-color: rgba(255,255,255,0.1);
+      }
+      #sections li.active {
+        padding-left: 5px;
+        border-left-width: 7px;
+        background-color: rgba(255,255,255,0.2);
+        cursor: default;
+      }
+      #title {
+        height: 15px;
+        font-size: 15px;
+        padding: 5px;
+        margin: 0;
+        color: white;
+        background: none;
+      }
+      #otherstuff button {
+        position: absolute;
+        height: 15px;
+        width: 15px;
+        top: 5px;
+        border: none;
+        background-color: transparent;
+        background-size: 15px;
+        cursor: pointer;
+      }
+      #fullscreen {
+        background-image: url('material_fullscreen.svg');
+        right: 5px;
+      }
+      #blocks {
+        overflow-y: auto;
+        margin: 3px 0;
+        overflow-x: hidden;
+        margin-right: 5px;
+        position: relative;
+      }
+      #blocks h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: normal;
+        margin-left: 20px;
+        position: relative;
+        display: table;
+      }
+      #blocks h1:before, #blocks h1:after {
+        content: '';
+        border-bottom: 1.5px solid rgba(255, 255, 255, 0.3);
+        display: block;
+        box-sizing: border-box;
+        position: absolute;
+        bottom: 7px;
+      }
+      #blocks h1:before {
+        width: 10px;
+        left: -15px;
+      }
+      #blocks h1:after {
+        width: 200px;
+        left: calc(100% + 5px);
+      }
+      #blocks::-webkit-scrollbar {
+      	display: none;
+      }
+      body.fullscreen {
+        background: #CC6666;
+      }
+      body.fullscreen > *:not(#stuff),
+      body.fullscreen #stuff > *:not(#otherstuff),
+      body.fullscreen #stuff #otherstuff *:not(#stage) {
+        display: none;
+      }
+      body.fullscreen #stage {
+        display: block;
+        width: calc(100% - 10px);
+        height: 100%;
+        position: fixed;
+        left: 0;
+        top: 0;
+        margin-left: 10px;
+      }
+      #blankScrollThingy {
+        width: 0;
+        display: block;
+        height: 50vh;
+      }
+      #blocks .blocks.blocks-blockwrapper, #blocks .blocks.blocks-stackback, #blocks svg.blocks.blocks-cback {
+        position: relative;
+      }
+      #blocks > .blocks.blocks-blockwrapper {
+        margin: 4px 5px;
+      }
+      #blocks .blocks.blocks-stackback, #blocks svg.blocks.blocks-cback {
+        cursor: -moz-grab;
+        cursor: -webkit-grab;
+        cursor: grab;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="bar">
+      <li id="logo">HYPERBLOCKS</li>
+      <li class="btn">file<ul>
+        <li>save</li>
+        <li>open</li>
+        <li>new</li>
+      </ul></li>
+      <li class="btn">edit<ul>
+        <li>cut</li>
+        <li>copy</li>
+        <li>paste</li>
+      </ul></li>
+      <li class="btn">about</li>
+      <li class="btn">help</li>
+    </ul>
+    <div id='stuff'>
+      <div id="palette">
+        <ul id="sections"></ul>
+        <div id="blocks"><div id="blankScrollThingy"></div></div>
+      </div>
+      <div id="otherstuff">
+        <p id="title">Title</p>
+        <button id="fullscreen"></button>
+        <iframe id="stage"></iframe>
+      </div>
+      <div id="scripts"></div>
+    </div>
+
+    <script src="../sheep.js"></script>
+    <script src="testblock.js" charset="utf-8"></script>
+    <script src="testscript.js" charset="utf-8"></script>
+    <script>
+class Section {
+  constructor(label,colour,blocklist) {
+    this.li=document.createElement("li");
+    this.li.appendChild(document.createTextNode(label));
+    this.li.style.borderLeftColor=colour;
+    Section.ul.appendChild(this.li);
+    this.h1=document.createElement("h1");
+    this.h1.appendChild(document.createTextNode(label));
+    this.h1.style.color=colour;
+    Section.div.insertBefore(this.h1,Section.div.lastChild);
+    this.blocks=[];
+    for (var i of blocklist) {
+      var s=new Script(Section.div,{attrscript:i[0]==='attr',lonely:true,dontregister:true}),
+      t=new Block(i[0],i[1],{colour:colour,copy:true});
+      s.addchild(t);
+      this.blocks.push(s);
+    }
+    for (var i=this.blocks.length-1;i>=0;i--) Section.div.insertBefore(this.blocks[i].wrapper,this.h1.nextSibling);
+    Section.div.addEventListener("scroll",e=>{
+      if (Section.div.scrollTop-this.h1.offsetTop>=0) {
+        if (document.querySelector('#sections li.active')) document.querySelector('#sections li.active').classList.remove('active');
+        this.li.classList.add('active');
+      }
+    },false);
+    this.li.addEventListener("click",e=>{
+      this.h1.scrollIntoView();
+      Section.div.scrollTop+=1;
+    },false);
+  }
+  static stringToBlockList(str) {
+    str=str.split(/\r?\n/);
+    var r=[],key={C:'c',S:'stack',T:'text',A:'attr'};
+    for (var i of str) r.push([key[i[0]],i.slice(1)]);
+    return r;
+  }
+}
+Section.ul=document.querySelector('#sections');
+Section.div=document.querySelector('#blocks');
+var workspace=document.querySelector('#scripts'),
+frame=document.querySelector('#stage');
+var text=new Section('Text','#CC6666',Section.stringToBlockList(`Cparagraph
+Cheading 1
+Cheading 2
+Cheading 3
+Shorizontal line
+Clink
+Cspan
+Ctitle`)),
+format=new Section('Formatting','#9B6ABD',Section.stringToBlockList(`Cbold
+Citalics
+Cunderline
+Cstrikethrough
+Ccode
+Csuperscript
+Csubscript`)),
+organise=new Section('Organisation','#6A92BC',Section.stringToBlockList(`Cdivision`)),
+forms=new Section('Forms and inputs','#6ABC88',Section.stringToBlockList(`Cform
+Sinput
+Ctextarea
+Cbutton
+Cselect
+Coption group
+Coption`)),
+media=new Section('Media','#BC6AA1',Section.stringToBlockList(`Simage
+Scanvas
+Caudio
+Cvideo
+Siframe
+Smeta`)),
+table=new Section('Tables and lists','#6AB6BC',Section.stringToBlockList(`Cordered list
+Cbulleted list
+Clist item
+Ctable
+Ctable row
+Ctable heading
+Ctable cell`)),
+attrs=new Section('Attributes','#BDB16A',Section.stringToBlockList(`Asource
+Alinks to
+Atype
+Ahas value of
+Aplaceholder
+Aname
+Ahover text
+Aalternate text`));
+text.li.classList.add('active');
+var dragger=new Drag(workspace),
+attributedragger=new AttrDrag(workspace),
+mainhtml=new Script(workspace,{x:10,y:10});
+dragger.deleteX=-10;
+attributedragger.deleteX=-10;
+(function() {
+  var s=new Script(Section.div,{lonely:true,dontregister:true}),
+  t=new Block('stack','new line',{copy:true,colour:'#666'});
+  s.addchild(t);
+  Section.div.insertBefore(s.wrapper,Section.div.firstChild);
+  s=new Script(Section.div,{lonely:true,dontregister:true}),
+  t=new Block('text','text',{copy:true});
+  s.addchild(t);
+  Section.div.insertBefore(s.wrapper,Section.div.firstChild);
+  t=new Block('stack','This is HTML:',{colour:'rgba(255,255,255,0.5)',dontdelete:true});
+  mainhtml.addchild(t);
+  t=new Block('c','HTML here',{colour:'#804040',dontdelete:true});
+  mainhtml.addchild(t);
+  var s=new Block('c','data',{colour:'#804040',dontdelete:true});
+  t.addchild(s);
+  s=new Block('c','content',{colour:'#804040',dontdelete:true});
+  t.addchild(s);
+}());
+function render() {
+  var elements={
+    'This is HTML:':[0,'<!DOCTYPE html>'],
+    'HTML here':[1,'html'],
+    'data':[1,'head'],
+    'content':[1,'body'],
+    'title':[1,'title'],
+    'paragraph':[1,'p'],
+    'heading 1':[1,'h1'],
+    'heading 2':[1,'h2'],
+    'heading 3':[1,'h3']
+  },dealwith=stuff=>{
+    var html='';
+    for (var i=0;i<stuff.length;i++) {
+      if (stuff[i][0]==='__TEXT__') html+=stuff[i][1];
+      else {
+        var t=elements[stuff[i][0]];
+        if (!t) t=[1,stuff[i][0]];
+        if (t[0]===0||t[0]===2) html+=t[1];
+        else if (t[0]===1) html+='<'+t[1];
+        if (typeof stuff[i][1]==='object') {
+          if (t[0]===1) html+=dealwith(stuff[i][1])+'>';
+          else if (t[0]===3) html+=dealwith(stuff[i][1])+'/>';
+          else if (t[0]===2) html+='="'+dealwith(stuff[i][1])+'" ';
+        }
+        if (typeof stuff[i][2]==='object') html+=dealwith(stuff[i][2]);
+        if (t[0]===1) html+='</'+t[1]+'>';
+      }
+    }
+    return html;
+  };
+  frame.contentDocument.write(dealwith(Script.JSON[0][2]));
+}
+function contextMenu(e,lis) {
+  var s=document.querySelector('.menu');
+  if (!s) {
+    s=document.createElement('UL');
+    s.className='menu';
+    s.onclick=function(e){
+      // placeholder
+      if (e.target.tagName=='LI') console.log(e.target.innerHTML);
+    }
+    s.addEventListener('contextmenu',function(e){
+      document.body.removeChild(s);
+      window.removeEventListener("click",click,false);
+    },false);
+    document.body.appendChild(s);
+  }
+  while (s.hasChildNodes()) s.removeChild(s.lastChild);
+  for (var i of lis) {
+    var t=document.createElement("li");
+    t.textContent=i;
+    s.appendChild(t);
+  }
+  s.style.left=(e.clientX-2.5)+"px";
+  s.style.top=(e.clientY-2.5)+"px";
+  var click=e=>{
+    document.body.removeChild(s);
+    window.removeEventListener("click",click,false);
+  };
+  window.addEventListener("click",click,false);
+}
+document.querySelector('#palette').addEventListener('contextmenu',function(e){
+  contextMenu(e,['help']);
+  e.preventDefault();
+},false);
+    </script>
+  </body>
+  <!-- MADE BY SEAN -->
+</html>

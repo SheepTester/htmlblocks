@@ -8,8 +8,9 @@ class Script {
     this.x=options.x||0;
     this.y=options.y||0;
     this.isattr=!!options.attrscript;
+    this.friendless=!!options.lonely;
     this.children=[];
-    if (!options.dragger) Script.scripts.push(this);
+    if (!options.dragger&&!options.dontregister) Script.scripts.push(this);
   }
   get x() {return this._x;}
   set x(x) {
@@ -78,45 +79,72 @@ class Script {
     }
   }
   get hitboxes() {
-    var hitboxes=[],
-    insertblocks=(blocks,to,index=-1)=>{
-      var t=[to.wrapper.parentNode,to.x,to.y];
-      if (blocks[0].type==='c'&&blocks[0].children.length===0&&~index)
-        for (var i=index;to.children&&i<to.children.length;) blocks[0].addchild(to.children[i]);
-      if (to.children) {
-        if (index===0&&to instanceof Script) t=to.visualheight;
-        else if (!~index) index=to.children.length;
-        for (var i=blocks.length-1;i>=0;i--) {
-          blocks[i].moving=false;
-          to.addchild(blocks[i],index);
+    if (!this.isattr&&!this.friendless) {
+      var hitboxes=[],
+      insertblocks=(blocks,to,index=-1)=>{
+        var t=[to.wrapper.parentNode,to.x,to.y];
+        if (blocks[0].type==='c'&&blocks[0].children.length===0&&~index)
+          for (var i=index;to.children&&i<to.children.length;) blocks[0].addchild(to.children[i]);
+        if (to.children) {
+          if (index===0&&to instanceof Script) t=to.visualheight;
+          else if (!~index) index=to.children.length;
+          for (var i=blocks.length-1;i>=0;i--) {
+            blocks[i].moving=false;
+            to.addchild(blocks[i],index);
+          }
+          if (index===0&&to instanceof Script) to.y-=to.visualheight-t;
+        } else {
+          t=new Script(t[0],{x:t[1],y:t[2]});
+          for (var i=0;i<blocks.length;i++) {
+            blocks[i].moving=false;
+            t.addchild(blocks[i]);
+          }
+          if (index===0&&to instanceof Script) t.x-=15,t.y-=30;
         }
-        if (index===0&&to instanceof Script) to.y-=to.visualheight-t;
-      } else {
-        t=new Script(t[0],{x:t[1],y:t[2]});
-        for (var i=0;i<blocks.length;i++) {
-          blocks[i].moving=false;
-          t.addchild(blocks[i]);
-        }
-        if (index===0&&to instanceof Script) t.x-=15,t.y-=30;
-      }
-    },
-    height=this.y+this.visualheight;
-    for (var i of this.children) hitboxes.push(...i.hitboxes);
-    hitboxes.push(new Hitbox(this.x-15,this.y,this.x+this.children[0].visualwidth,this.y-30,[this.x,this.y,false,this.visualheight],blocks=>{
-      insertblocks(blocks,this,0);
-    }));
-    hitboxes.push(new Hitbox(this.x-15,height,this.x+this.children[this.children.length-1].visualwidth,height+30,[this.x,height,true],blocks=>{
-      insertblocks(blocks,this);
-    }));
-    return hitboxes;
+      },
+      box=this.wrapper.getBoundingClientRect();
+      for (var i of this.children) hitboxes.push(...i.hitboxes);
+      hitboxes.push(new Hitbox(box.left-15,box.top,box.left+this.children[0].visualwidth,box.top-30,[box.left,box.top,false,this.visualheight],blocks=>{
+        insertblocks(blocks,this,0);
+      }));
+      hitboxes.push(new Hitbox(box.left-15,box.top+this.visualheight,box.left+this.children[this.children.length-1].visualwidth,box.top+this.visualheight+30,[box.left,box.top+this.visualheight,true],blocks=>{
+        insertblocks(blocks,this);
+      }));
+      return hitboxes;
+    } else return [];
   }
   get attrhitboxes() {
-    var hitboxes=[];
-    for (var i of this.children) hitboxes.push(...i.attrhitboxes);
-    return hitboxes;
+    if (!this.friendless) {
+      var hitboxes=[];
+      for (var i of this.children) hitboxes.push(...i.attrhitboxes);
+      return hitboxes;
+    } else return [];
   }
   get visualheight() {
     return this.children[this.children.length-1].y+this.children[this.children.length-1].visualheight;
+  }
+  get json() {
+    var r=[];
+    for (var i of this.children) r.push(i.json);
+    return [this.x,this.y,r];
+  }
+  static get JSON() {
+    var r=[];
+    for (var i of Script.scripts) r.push(i.json);
+    return r;
+  }
+  kill() {
+    if (this.children.length) {
+      for (;this.children&&this.children.length;) this.removechild(this.children[0]);
+    } else {
+      this.wrapper.parentNode.removeChild(this.wrapper);
+      for (var span in this) this[span]=null;
+      this.dead=true;
+      for (var i=0;i<Script.scripts.length;i++) if (Script.scripts[i]===this) {
+        Script.scripts.splice(i,1);
+        break;
+      }
+    }
   }
 }
 class Drag extends Script {
@@ -129,7 +157,7 @@ class Drag extends Script {
     this.preview.classList.add('blocks-movepreview');
     this.preview.style.display='none';
     document.body.appendChild(this.preview);
-    document.addEventListener("mousemove",e=>{
+    var mousemove=(e,istouch)=>{
       if (this.d) {
         if (!this.d.down) {
           this.d.down=true;
@@ -140,9 +168,10 @@ class Drag extends Script {
             this.preview.style.width=this.children[0].visualwidth+'px';
             for (var i=Script.scripts.length-1;i>=0;i--) this.d.hitboxes.push(...Script.scripts[i].hitboxes);
           }
+          document.body.classList.add('blocks-grabbing');
         }
-        this.x=e.clientX-this.d.x;
-        this.y=e.clientY-this.d.y;
+        this.x=(istouch?e.touches[0].clientX:e.clientX)-this.d.x;
+        this.y=(istouch?e.touches[0].clientY:e.clientY)-this.d.y;
         if (attrdrag) {
           var t=true;
           for (var i of this.d.hitboxes) if (i.pointinhitbox(this.x,this.y)) {
@@ -173,11 +202,14 @@ class Drag extends Script {
             }
             break;
           }
-          if (t) this.preview.style.display='none';
+          if (t) {
+            this.preview.style.display='none';
+            if (this.children[0].type==='c'&&this.children[0].children.length===0) this.children[0].updateback();
+          }
         }
       }
-    },false);
-    document.addEventListener("mouseup",e=>{
+    },
+    mouseup=(e,istouch)=>{
       if (this.d) {
         if (!this.d.down) {
           this.d.down=true;
@@ -189,8 +221,8 @@ class Drag extends Script {
             for (var i=Script.scripts.length-1;i>=0;i--) this.d.hitboxes.push(...Script.scripts[i].hitboxes);
           }
         }
-        this.x=e.clientX-this.d.x;
-        this.y=e.clientY-this.d.y;
+        this.x=(istouch?e.changedTouches[0].clientX:e.clientX)-this.d.x;
+        this.y=(istouch?e.changedTouches[0].clientY:e.clientY)-this.d.y;
         if (attrdrag) {
           var t=true;
           for (var i of this.d.hitboxes) if (i.pointinhitbox(this.x,this.y)) {
@@ -202,13 +234,15 @@ class Drag extends Script {
             var newscript=new Script(this.wrapper.parentNode,{x:0,y:0,attrscript:true});
             newscript.x=this.x-newscript.wrapper.getBoundingClientRect().left;
             newscript.y=this.y-newscript.wrapper.getBoundingClientRect().top;
+            if (newscript.x<0) {var derp=newscript.x;for (var i of Script.scripts) i.x-=derp;}
+            if (newscript.y<0) {var derp=newscript.y;for (var i of Script.scripts) i.y-=derp;}
             while (this.children.length) {
               this.children[0].moving=false;
               newscript.addchild(this.children[0]);
             }
           }
         } else {
-          var t=true;
+          var t=true,shouldIworry=this.children[0].type==='c'&&this.children[0].children.length===0;
           for (var i of this.d.hitboxes) if (i.pointinhitbox(this.x,this.y)) {
             t=false;
             i.hit(this.children);
@@ -218,18 +252,32 @@ class Drag extends Script {
             var newscript=new Script(this.wrapper.parentNode,{x:0,y:0});
             newscript.x=this.x-newscript.wrapper.getBoundingClientRect().left;
             newscript.y=this.y-newscript.wrapper.getBoundingClientRect().top;
+            /*if (this.deleteX!==undefined&&newscript.x<this.deleteX) {
+              newscript.kill();
+            }
+            else */if (newscript.x<0) {var derp=newscript.x;for (var i of Script.scripts) i.x-=derp;}
+            if (newscript.y<0) {var derp=newscript.y;for (var i of Script.scripts) i.y-=derp;}
             while (this.children.length) {
               this.children[0].moving=false;
               newscript.addchild(this.children[0]);
             }
           }
+          for (var j of Script.scripts) {
+            if (j.x<0) {var derp=j.x;for (var i of Script.scripts) i.x-=derp;}
+            if (j.y<0) {var derp=j.y;for (var i of Script.scripts) i.y-=derp;}
+          }
           this.preview.classList.remove('blocks-cblockpreview');
           this.preview.style.height='1px';
         }
         this.preview.style.display='none';
+        document.body.classList.remove('blocks-grabbing');
         this.d=false;
       }
-    },false);
+    };
+    document.addEventListener("mousemove",e=>mousemove(e,false),false);
+    document.addEventListener("mouseup",e=>mouseup(e,false),false);
+    document.addEventListener("touchmove",e=>mousemove(e,true),{passive:false});
+    document.addEventListener("touchend",e=>mouseup(e,true),{passive:false});
   }
   removechild(block) {
     this.wrapper.removeChild(this.wrapper.children[block.parent[1]]);

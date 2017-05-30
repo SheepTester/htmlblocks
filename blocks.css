@@ -1,0 +1,102 @@
+.blocks {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+body.blocks-grabbing {
+  cursor: -moz-grabbing;
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+div.blocks.blocks-stackback {
+  box-sizing: border-box;
+  padding: 5px;
+  border: 2px solid rgba(0,0,0,0.2);
+}
+span.blocks.blocks-label {
+  color: white;
+  text-shadow: 0 0 2px black;
+  font-family: 'Lato', sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+  white-space: pre;
+}
+textarea.blocks.blocks-textbox {
+  background-color: transparent;
+  border: none;
+  -webkit-appearance: none;
+  resize: none;
+  color: white;
+  text-shadow: 0 0 2px black;
+  font-family: 'Lato', sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  overflow: hidden;
+  white-space: pre;
+}
+svg.blocks.blocks-cback {
+  stroke: rgba(0,0,0,0.2);
+  stroke-width: 4;
+}
+input.blocks.blocks-input,span.blocks.blocks-input {
+  color: #222;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  font-family: 'Lato', sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  height: 16px;
+  min-width: 5px;
+}
+span.blocks.blocks-input {
+  background-color: white;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+  white-space: pre;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+  min-width: 5px;
+}
+span.blocks.blocks-input.focused {
+  color: transparent;
+}
+div.blocks.blocks-dragger {
+  z-index: 10;
+  opacity: 0.8;
+  box-shadow: 0 0 3px rgba(0,0,0,0.3);
+  position: fixed;
+}
+div.blocks.blocks-hitboxshow {
+  position: fixed;
+  opacity: 0.5;
+  background-color: black;
+  border: 2px solid red;
+  z-index: 10;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+div.blocks.blocks-movepreview {
+  position: fixed;
+  height: 1px;
+  width: 1px;
+  background-color: white;
+  box-shadow: 0 0 3px white;
+  pointer-events: none;
+}
+div.blocks.blocks-movepreview.blocks-cblockpreview {
+  background-color: transparent;
+  box-shadow: none;
+  -webkit-filter: drop-shadow(0 0 3px white);
+  filter: drop-shadow(0 0 3px white);
+  border: 1px solid white;
+  border-right: none;
+}
