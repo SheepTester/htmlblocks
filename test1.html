@@ -117,6 +117,7 @@
         padding: 5px;
         list-style: none;
         font-size: 15px;
+        box-shadow: 0px 1px 3px rgba(0,0,0,0.3);
       }
       .menu li {
         cursor: pointer;
@@ -129,21 +130,26 @@
       #sections {
         background: #333;
         width: 100%;
-        padding: 0;
-        margin: 0;
       }
-      #sections li {
+      #sections input {
         height: 20px;
         padding: 1px 10px;
         border-left: 2px solid transparent;
         cursor: pointer;
         user-select: none;
-        -webkit-user-select: none;
+        margin: 0;
+        -webkit-appearance: none;
+        color: inherit;
+        display: block;
+        width: 100%;
       }
-      #sections li:not(.active):hover {
+      #sections input::after {
+        content: attr(data-label);
+      }
+      #sections input:not(:checked):hover {
         background-color: rgba(255,255,255,0.1);
       }
-      #sections li.active {
+      #sections input:checked {
         padding-left: 5px;
         border-left-width: 7px;
         background-color: rgba(255,255,255,0.2);
@@ -156,6 +162,7 @@
         margin: 0;
         color: white;
         background: none;
+        cursor: default;
       }
       #otherstuff button {
         position: absolute;
@@ -258,7 +265,7 @@
     </ul>
     <div id='stuff'>
       <div id="palette">
-        <ul id="sections"></ul>
+        <div id="sections"></div>
         <div id="blocks"><div id="blankScrollThingy"></div></div>
       </div>
       <div id="otherstuff">
@@ -272,55 +279,20 @@
     <script src="../sheep.js"></script>
     <script src="testblock.js" charset="utf-8"></script>
     <script src="testscript.js" charset="utf-8"></script>
+    <script src="element.js" charset="utf-8"></script>
     <script>
-class Section {
-  constructor(label,colour,blocklist) {
-    this.li=document.createElement("li");
-    this.li.appendChild(document.createTextNode(label));
-    this.li.style.borderLeftColor=colour;
-    Section.ul.appendChild(this.li);
-    this.h1=document.createElement("h1");
-    this.h1.appendChild(document.createTextNode(label));
-    this.h1.style.color=colour;
-    Section.div.insertBefore(this.h1,Section.div.lastChild);
-    this.blocks=[];
-    for (var i of blocklist) {
-      var s=new Script(Section.div,{attrscript:i[0]==='attr',lonely:true,dontregister:true}),
-      t=new Block(i[0],i[1],{colour:colour,copy:true});
-      s.addchild(t);
-      this.blocks.push(s);
-    }
-    for (var i=this.blocks.length-1;i>=0;i--) Section.div.insertBefore(this.blocks[i].wrapper,this.h1.nextSibling);
-    Section.div.addEventListener("scroll",e=>{
-      if (Section.div.scrollTop-this.h1.offsetTop>=0) {
-        if (document.querySelector('#sections li.active')) document.querySelector('#sections li.active').classList.remove('active');
-        this.li.classList.add('active');
-      }
-    },false);
-    this.li.addEventListener("click",e=>{
-      this.h1.scrollIntoView();
-      Section.div.scrollTop+=1;
-    },false);
-  }
-  static stringToBlockList(str) {
-    str=str.split(/\r?\n/);
-    var r=[],key={C:'c',S:'stack',T:'text',A:'attr'};
-    for (var i of str) r.push([key[i[0]],i.slice(1)]);
-    return r;
-  }
-}
-Section.ul=document.querySelector('#sections');
-Section.div=document.querySelector('#blocks');
+Section.categories=document.querySelector('#sections');
+Section.blocklist=document.querySelector('#blocks');
 var workspace=document.querySelector('#scripts'),
 frame=document.querySelector('#stage');
-var text=new Section('Text','#CC6666',Section.stringToBlockList(`Cparagraph
+var text=new Section('Text','#BD806A',Section.stringToBlockList(`Cparagraph
 Cheading 1
 Cheading 2
 Cheading 3
 Shorizontal line
 Clink
 Cspan
-Ctitle`)),
+Ctab name`)),
 format=new Section('Formatting','#9B6ABD',Section.stringToBlockList(`Cbold
 Citalics
 Cunderline
@@ -357,29 +329,25 @@ Aplaceholder
 Aname
 Ahover text
 Aalternate text`));
-text.li.classList.add('active');
+text.li.checked=true;
 var dragger=new Drag(workspace),
 attributedragger=new AttrDrag(workspace),
-mainhtml=new Script(workspace,{x:10,y:10});
+mainhtml;
 dragger.deleteX=-10;
 attributedragger.deleteX=-10;
 (function() {
-  var s=new Script(Section.div,{lonely:true,dontregister:true}),
+  var s=new Script(Section.blocklist,{lonely:true,dontregister:true}),
   t=new Block('stack','new line',{copy:true,colour:'#666'});
   s.addchild(t);
-  Section.div.insertBefore(s.wrapper,Section.div.firstChild);
-  s=new Script(Section.div,{lonely:true,dontregister:true}),
-  t=new Block('text','text',{copy:true});
-  s.addchild(t);
-  Section.div.insertBefore(s.wrapper,Section.div.firstChild);
-  t=new Block('stack','This is HTML:',{colour:'rgba(255,255,255,0.5)',dontdelete:true});
-  mainhtml.addchild(t);
-  t=new Block('c','HTML here',{colour:'#804040',dontdelete:true});
-  mainhtml.addchild(t);
-  var s=new Block('c','data',{colour:'#804040',dontdelete:true});
-  t.addchild(s);
-  s=new Block('c','content',{colour:'#804040',dontdelete:true});
-  t.addchild(s);
+  Section.blocklist.insertBefore(s.wrapper,Section.blocklist.firstChild);
+  s=new Script(Section.blocklist,{lonely:true,dontregister:true}),
+  s.addchild(new Block('text','text',{copy:true}));
+  Section.blocklist.insertBefore(s.wrapper,Section.blocklist.firstChild);
+  s=new Script(workspace,{x:10,y:10});
+  s.addchild(mainhtml=new Block('stack','This is HTML:',{colour:'rgba(255,255,255,0.5)',dontdelete:true}));
+  s.addchild(mainhtml.doc=new Block('c','HTML here',{colour:'#804040',dontdelete:true}));
+  mainhtml.doc.addchild(mainhtml.head=new Block('c','data',{colour:'#804040',dontdelete:true}));
+  mainhtml.doc.addchild(mainhtml.body=new Block('c','content',{colour:'#804040',dontdelete:true}));
 }());
 function render() {
   var elements={
@@ -387,7 +355,7 @@ function render() {
     'HTML here':[1,'html'],
     'data':[1,'head'],
     'content':[1,'body'],
-    'title':[1,'title'],
+    'tab name':[1,'title'],
     'paragraph':[1,'p'],
     'heading 1':[1,'h1'],
     'heading 2':[1,'h2'],
@@ -413,38 +381,114 @@ function render() {
     return html;
   };
   frame.contentDocument.write(dealwith(Script.JSON[0][2]));
+  document.querySelector('#title').textContent=frame.contentDocument.title;
 }
 function contextMenu(e,lis) {
   var s=document.querySelector('.menu');
   if (!s) {
     s=document.createElement('UL');
     s.className='menu';
-    s.onclick=function(e){
-      // placeholder
-      if (e.target.tagName=='LI') console.log(e.target.innerHTML);
-    }
     s.addEventListener('contextmenu',function(e){
       document.body.removeChild(s);
       window.removeEventListener("click",click,false);
     },false);
     document.body.appendChild(s);
+    var click=e=>{
+      document.body.removeChild(s);
+      window.removeEventListener("click",click,false);
+    };
+    window.addEventListener("click",click,false);
   }
   while (s.hasChildNodes()) s.removeChild(s.lastChild);
   for (var i of lis) {
     var t=document.createElement("li");
-    t.textContent=i;
+    if (typeof i==='object') {
+      t.textContent=i[0];
+      if (i[1]) t.addEventListener("click",i[1],false);
+    } else t.textContent=i;
     s.appendChild(t);
   }
   s.style.left=(e.clientX-2.5)+"px";
   s.style.top=(e.clientY-2.5)+"px";
-  var click=e=>{
-    document.body.removeChild(s);
-    window.removeEventListener("click",click,false);
-  };
-  window.addEventListener("click",click,false);
 }
 document.querySelector('#palette').addEventListener('contextmenu',function(e){
-  contextMenu(e,['help']);
+  contextMenu(e,[['help',e=>{console.log('help');}]]);
+  e.preventDefault();
+},false);
+workspace.addEventListener('contextmenu',function(e){
+  var targ=e.target,initxy={x:e.clientX,y:e.clientY},elsedone=false;
+  if (targ.classList.contains('blocks-stackback')||targ.classList.contains('blocks-cback')||targ.parentNode.classList.contains('blocks-cback')) {
+    if (targ.parentNode.classList.contains('blocks-cback')) targ=targ.parentNode;
+    var array=[],block=Script.backowner(targ);
+    if (block.killable) array.push(['duplicate',ev=>{
+      var parent=block.parent;
+      if (block.type==='attr') {
+        Script.attrdragger.d={x:initxy.x-targ.getBoundingClientRect().left,y:initxy.y-targ.getBoundingClientRect().top};
+        Script.attrdragger.x=ev.clientX-Script.attrdragger.d.x;
+        Script.attrdragger.y=ev.clientY-Script.attrdragger.d.y;
+        var t=block.copy;
+        t.moving=true;
+        Script.attrdragger.addchild(t);
+        t.updateback();
+        if (parent) {
+          if (parent[0].attrs) for (var i=parent[1]+1;parent[0].attrs&&i<parent[0].attrs.length;i++) {
+            var t=parent[0].attrs[i].copy;
+            t.moving=true;
+            Script.attrdragger.addchild(t);
+            t.updateback();
+          }
+          else for (var i=parent[1]+1;parent[0].children&&i<parent[0].children.length;i++) {
+            var t=parent[0].children[i].copy;
+            t.moving=true;
+            Script.attrdragger.addchild(t);
+            t.updateback();
+          }
+        }
+      } else {
+        Script.dragger.d={x:initxy.x-targ.getBoundingClientRect().left,y:initxy.y-targ.getBoundingClientRect().top};
+        Script.dragger.x=ev.clientX-Script.dragger.d.x;
+        Script.dragger.y=ev.clientY-Script.dragger.d.y;
+        var t=block.copy;
+        t.moving=true;
+        Script.dragger.addchild(t);
+        t.updateback();
+        if (parent) for (var i=parent[1]+1;parent[0].children&&i<parent[0].children.length;i++) {
+          var t=parent[0].children[i].copy;
+          t.moving=true;
+          Script.dragger.addchild(t);
+          t.updateback();
+        }
+      }
+    }]);
+    if (block.type!=='attr') array.push(['add text block',ev=>{
+      var text=new Block('text','');
+      if (block.type==='c') block.addchild(text,0);
+      else block.parent[0].addchild(text,block.parent[1]+1);
+      text.focus();
+    }])
+    array.push('help');
+    contextMenu(e,array);
+  } else if (targ===workspace) {
+    contextMenu(e,[['add text block',ev=>{
+      Script.dragger.d={x:ev.clientX-initxy.x,y:ev.clientY-initxy.y};
+      Script.dragger.x=ev.clientX-Script.dragger.d.x;
+      Script.dragger.y=ev.clientY-Script.dragger.d.y;
+      var t=new Block('text','');
+      t.moving=true;
+      Script.dragger.addchild(t);
+    }],'help']);
+  } else elsedone=true;
+  if (!elsedone) e.preventDefault();
+},false);
+document.querySelector('#title').addEventListener('contextmenu',function(e){
+  contextMenu(e,[['change tab name',ev=>{
+    var s=new Block('c','tab name',{colour:text.colour}),
+    t=new Block('text','');
+    s.addchild(t);
+    mainhtml.head.addchild(s);
+    t.focus();
+    t.updateback();
+  }],'help']);
   e.preventDefault();
 },false);
     </script>

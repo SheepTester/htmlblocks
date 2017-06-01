@@ -146,6 +146,26 @@ class Script {
       }
     }
   }
+  get killable() {
+    for (var i of this.children) if (!i.killable) return false;
+    return true;
+  }
+  whoOwnsThisBack(backelem) { // "Who owns this back?" asks the Script class.
+    var t; // "Not me," said the script.
+    for (var i of this.children) { // "I'll ask my blocks."
+      if (t=i.doYouOwnThisBack(backelem)) // And to each of its blocks it asked, "Do you own this back?"
+        return t; // Finally, a block didn't respond "false." Overjoyed, the script immediately reported its findings to the Script class.
+    }
+    return false; // But when all of its blocks responded "false," the script sadly responded "false" to the Script class.
+  }
+  static backowner(backelem) { // "Give me the owner of this back element," the caller demanded.
+    var t; // "Okay," the Script class said obediently.
+    for (var i of Script.scripts) { // To each of the scripts the class asked:
+      if (t=i.whoOwnsThisBack(backelem)) // "Who owns this back?"
+        return t; // Finally, a script didn't respond false. The Script class dutifully returned its findings to the caller.
+    }
+    return null; // However, the Script class was not able to find a block that owned the back. "Maybe the script with the block wasn't registered, or it isn't a back of a block," the Script class responded with a null.
+  }
 }
 class Drag extends Script {
   constructor(parent,attrdrag=false) {
@@ -234,11 +254,16 @@ class Drag extends Script {
             var newscript=new Script(this.wrapper.parentNode,{x:0,y:0,attrscript:true});
             newscript.x=this.x-newscript.wrapper.getBoundingClientRect().left;
             newscript.y=this.y-newscript.wrapper.getBoundingClientRect().top;
-            if (newscript.x<0) {var derp=newscript.x;for (var i of Script.scripts) i.x-=derp;}
-            if (newscript.y<0) {var derp=newscript.y;for (var i of Script.scripts) i.y-=derp;}
-            while (this.children.length) {
-              this.children[0].moving=false;
-              newscript.addchild(this.children[0]);
+            if ((this.deleteX!==undefined&&newscript.x<this.deleteX||this.deleteY!==undefined&&newscript.y<this.deleteY)&&newscript.killable) {
+              newscript.kill();
+              while (this.children.length) this.removechild(this.children[0]);
+            } else {
+              if (newscript.x<0) {var derp=newscript.x;for (var i of Script.scripts) i.x-=derp;}
+              if (newscript.y<0) {var derp=newscript.y;for (var i of Script.scripts) i.y-=derp;}
+              while (this.children.length) {
+                this.children[0].moving=false;
+                newscript.addchild(this.children[0]);
+              }
             }
           }
         } else {
@@ -252,14 +277,16 @@ class Drag extends Script {
             var newscript=new Script(this.wrapper.parentNode,{x:0,y:0});
             newscript.x=this.x-newscript.wrapper.getBoundingClientRect().left;
             newscript.y=this.y-newscript.wrapper.getBoundingClientRect().top;
-            /*if (this.deleteX!==undefined&&newscript.x<this.deleteX) {
+            if ((this.deleteX!==undefined&&newscript.x<this.deleteX||this.deleteY!==undefined&&newscript.y<this.deleteY)&&this.killable) {
               newscript.kill();
-            }
-            else */if (newscript.x<0) {var derp=newscript.x;for (var i of Script.scripts) i.x-=derp;}
-            if (newscript.y<0) {var derp=newscript.y;for (var i of Script.scripts) i.y-=derp;}
-            while (this.children.length) {
-              this.children[0].moving=false;
-              newscript.addchild(this.children[0]);
+              while (this.children.length) this.removechild(this.children[0]);
+            } else {
+              if (newscript.x<0) {var derp=newscript.x;for (var i of Script.scripts) i.x-=derp;}
+              if (newscript.y<0) {var derp=newscript.y;for (var i of Script.scripts) i.y-=derp;}
+              while (this.children.length) {
+                this.children[0].moving=false;
+                newscript.addchild(this.children[0]);
+              }
             }
           }
           for (var j of Script.scripts) {

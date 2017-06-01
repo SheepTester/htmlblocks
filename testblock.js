@@ -29,6 +29,7 @@ class Block {
     this.wrapper.classList.add('blocks-blockwrapper');
     this.type=type.toLowerCase();
     this.undeletable=!!options.dontdelete;
+    this.options=options;
     switch (this.type) {
       case 'text':
         this.back=document.createElement("div");
@@ -129,7 +130,7 @@ class Block {
         this.attrs=[];
     }
     var mousedown=(e,istouch)=>{
-      if (!this.moving) {
+      if (!this.moving&&(e.which===1||e.which===0)) {
         var mouse;
         if (istouch) mouse={initX:e.touches[0].clientX,initY:e.touches[0].clientY};
         else mouse={initX:e.clientX,initY:e.clientY};
@@ -145,6 +146,7 @@ class Block {
                 options.copy=false;
                 var t=new Block(type,label,Object.assign({},options));
                 t.input.value=this.input.value;
+                t.moving=true;
                 Script.attrdragger.addchild(t);
                 options.copy=true;
               } else {
@@ -170,6 +172,7 @@ class Block {
               if (options.copy) {
                 options.copy=false;
                 var t=new Block(type,label,Object.assign({},options));
+                t.moving=true;
                 if (type==='text') t.textbox.value=this.textbox.value,t.textdisplay.innerHTML=Block.addEntities((t.textbox.value||'')+'\b');
                 Script.dragger.addchild(t);
                 options.copy=true;
@@ -464,6 +467,64 @@ class Block {
       for (var i of this.attrs) r.push(i.json);
       for (var i of this.children) t.push(i.json);
       return [this.label.textContent,r,t];
+    }
+  }
+  get killable() {
+    switch (this.type) {
+      case 'text':
+      case 'attr':
+        return !this.undeletable;
+      case 'stack':
+        if (this.undeletable) return false;
+        for (var i of this.attrs) if (!i.killable) return false;
+        return true;
+      case 'c':
+        if (this.undeletable) return false;
+        for (var i of this.attrs) if (!i.killable) return false;
+        for (var i of this.children) if (!i.killable) return false;
+        return true;
+    }
+  }
+  doYouOwnThisBack(backelem) { // "Do you own this back?" the block's parent asked.
+    if (this.type!=='c') { // Most blocks said the same thing.
+      if (this.back!==backelem) { // When their backs didn't match
+        if (this.back==='stack') { // the stack blocks
+          var t; // would first
+          for (var i of this.attrs) if (t=i.doYouOwnThisBack(backelem)) return t; // ask the same question to each of its attributes.
+          return false; // But in the end, they would still return false;
+        } else return false; // The other blocks were more straightforwards with their no's.
+      } else return this; // But when the blocks matched, they would happily turn themselves in for recognition.
+    } else { // When the C blocks were asked the question,
+      if (this.back!==backelem&&this.backpath!==backelem) { // they would check both their back and the path making their back.
+        var t; // Like the stack blocks,
+        for (var i of this.attrs) if (t=i.doYouOwnThisBack(backelem)) return t; // the C blocks asked their attributes,
+        for (var i of this.children) if (t=i.doYouOwnThisBack(backelem)) return t; // but they also asked the blocks they held in their mouth.
+        return false; // Yet in the end, they'd still find nothing.
+      } else return this; // But the C blocks would do the same thing as the other blocks when their backs matched.
+    }
+  }
+  get copy() {
+    switch (this.type) {
+      case 'text':
+        var t=new Block('text',this.textbox.value,Object.assign({},this.options,{x:this.x,y:this.y}));
+        t.parent='';
+        return t;
+      case 'attr':
+        var t=new Block('attr',this.label.textContent,Object.assign({},this.options,{x:this.x,y:this.y}));
+        t.input.value=this.input.value;
+        t.parent='';
+        return t;
+      case 'stack':
+        var t=new Block('stack',this.label.textContent,Object.assign({},this.options,{x:this.x,y:this.y}));
+        for (var i of this.attrs) t.addattr(i.copy);
+        t.parent='';
+        return t;
+      case 'c':
+        var t=new Block('c',this.label.textContent,Object.assign({},this.options,{x:this.x,y:this.y}));
+        for (var i of this.attrs) t.addattr(i.copy);
+        for (var i of this.children) t.addchild(i.copy);
+        t.parent='';
+        return t;
     }
   }
 }
