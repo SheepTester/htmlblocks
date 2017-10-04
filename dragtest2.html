@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I think this is the fourth one</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="This time this won't just support Hyperblocks."/>
+    <style>
+      body {
+        line-height: 1;
+      }
+      #workspace {
+        height: 400px;
+        width: 400px;
+        border: 1px solid black;
+        position: relative;
+      }
+      .blocks {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id='workspace'></div>
+
+    <script src="../sheep.js"></script>
+    <script src="dragtest2.js"></script>
+    <script>
+var workspace=document.querySelector('#workspace');
+console.log(new Block('test tb%',{
+  appendto:workspace
+}));
+    </script>
+  </body>
+  <!-- MADE BY SEAN -->
+</html>
