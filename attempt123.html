@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>"Attempt 123"</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="in case it fails, im not giving a very useful name to this."/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../sheep2.css">
+    <script src="../sheep2.js" charset="utf-8"></script>
+    <style>
+      body {
+        background-color: #222;
+        font-size: 0;
+      }
+      #workspace {
+        margin: 20px;
+        height: 400px;
+        width: 400px;
+        border: 1px solid white;
+        overflow: auto;
+        position: relative;
+      }
+      .blocks {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .blocks.blocks-label {
+        color: white;
+        text-shadow: 0 0 2px black;
+        font-family: 'Lato', sans-serif;
+        font-size: 16px;
+        line-height: 1;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        pointer-events: none;
+        white-space: pre;
+      }
+      .blocks.blocks-back {
+        box-sizing: border-box;
+        box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2);
+      }
+      .blocks.blocks-input {
+        color: #222;
+        background-color: white;
+        border: none;
+        padding: 0;
+        font-family: 'Lato', sans-serif;
+        font-size: 16px;
+        line-height: 1;
+        height: 16px;
+        min-width: 5px;
+        white-space: pre;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+      }
+      .blocks.blocks-input:focus {
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="workspace"></div>
+
+    <script>
+window.config = {
+  blockPadding: 7,
+  componentSpacing: 5
+};
+class PositionalObject {
+  constructor(x, y) {
+    this.wrapper = document.createElement("div");
+    this.wrapper.className = 'blocks';
+
+    this.x = x, this.y = y;
+  }
+  get x() {return this._x;}
+  set x(x) {this._x = x, this.wrapper.style.transform = `translate(${this._x}px, ${this._y}px)`;}
+  get y() {return this._y;}
+  set y(y) {this._y = y, this.wrapper.style.transform = `translate(${this._x}px, ${this._y}px)`;}
+}
+class Script extends PositionalObject {
+  constructor(x, y) {
+    super(x, y);
+    this.blocks = [];
+  }
+  insertBefore(block, pos = this.blocks.length) {
+    let position = this.blocks.indexOf(block);
+    if (~position) this.blocks.splice(position, 1);
+    this.blocks.splice(pos, 0, block);
+    block.parentScript = this;
+    block.updatePositions();
+    this.updatePositions();
+  }
+  updatePositions() {
+    for (let i = 0, y = 0; i < this.blocks.length; i++) {
+      this.blocks[i].y = y;
+      y += this.blocks[i].height;
+    }
+  }
+}
+class Block extends PositionalObject {
+  constructor(colour, ...parts) {
+    super(0, 0);
+
+    this.back = document.createElement("div");
+    this.back.className = 'blocks blocks-back';
+    this.back.style.backgroundColor = colour;
+    this.wrapper.appendChild(this.back);
+
+    this.parentScript = null;
+    this.width = this.height = 0;
+
+    let i = parts.length;
+    while (i--) {
+      switch (typeof parts[i]) {
+        case 'string': parts[i] = new Label(parts[i]), parts[i].parentBlock = this; break;
+        case 'object': parts[i] = new TextInput(parts[i].type, parts[i].value, parts[i].id), parts[i].parentBlock = this; break;
+        default: parts.splice(i--, 1);
+      }
+    }
+    this.parts = parts;
+  }
+  get parentScript() {return this._script;}
+  set parentScript(newscript) {
+    this._script = newscript;
+    if (newscript !== null) newscript.wrapper.appendChild(this.wrapper);
+    else if (this.wrapper.parentNode) this.wrapper.parentNode.removeChild(this.wrapper);
+  }
+  updatePositions() {
+    let i,
+    width = config.blockPadding,
+    height = 0;
+    for (i = 0; i < this.parts.length; i++) {
+      this.parts[i].x = width;
+      width += this.parts[i].width + config.componentSpacing;
+      if (this.parts[i].height > height) height = this.parts[i].height;
+    }
+    width += config.blockPadding - config.componentSpacing;
+    height += config.blockPadding * 2;
+    this.back.style.width = width + 'px';
+    this.back.style.height = height + 'px';
+    this.width = width;
+    this.height = height;
+
+    i = this.parts.length;
+    height /= 2;
+    while (i--) this.parts[i].y = height - this.parts[i].height / 2;
+  }
+}
+class BlockComponent extends PositionalObject {
+  constructor(tagName, classes) {
+    super(0, 0);
+    this.wrapper = document.createElement(tagName);
+    this.wrapper.className = classes;
+    this.parentBlock = null;
+  }
+  get parentBlock() {return this._block;}
+  set parentBlock(newblock) {
+    this._block = newblock;
+    if (newblock !== null) newblock.wrapper.appendChild(this.wrapper);
+    else if (this.wrapper.parentNode) this.wrapper.parentNode.removeChild(this.wrapper);
+  }
+  calculateSize() {
+    let notInDOM = !this.wrapper.parentNode;
+    if (notInDOM) document.body.appendChild(this.wrapper);
+    let boundingRect = this.wrapper.getBoundingClientRect();
+    this.width = boundingRect.width;
+    this.height = boundingRect.height;
+    if (notInDOM) document.body.removeChild(this.wrapper);
+  }
+}
+class Label extends BlockComponent {
+  constructor(text) {
+    super('span', 'blocks blocks-label');
+
+    this.wrapper.textContent = text;
+
+    this.calculateSize();
+  }
+}
+class TextInput extends BlockComponent {
+  constructor(type, value, name) {
+    super('span', 'blocks blocks-input');
+
+    if (type === 'number') this.wrapper.className+=' blocks-numberinput';
+    this.wrapper.textContent = value;
+    this.wrapper.contentEditable = true;
+    this.wrapper.addEventListener("keydown", e => {
+      if (e.keyCode === 13) e.preventDefault();
+      switch (type) {
+        case 'number':
+          if (e.keyCode === 13) e.preventDefault();
+          break;
+      }
+    }, false);
+    this.wrapper.addEventListener("input", e => {
+      switch (type) {
+        case 'number': this.wrapper.textContent = this.wrapper.textContent.replace(/(\r?\n|[^0-9.e-])/g, ''); break;
+        default: this.wrapper.textContent = this.wrapper.textContent.replace(/\r?\n/g, '');
+      }
+      this.calculateSize();
+      this.parentBlock.updatePositions();
+    }, false);
+    this.calculateSize();
+
+    this.name = name;
+  }
+}
+let workspace = document.querySelector('#workspace'),
+script = new Script(30, 50);
+script.insertBefore(new Block('#BD806A', 'kiam la projekto komenciĝas'));
+script.insertBefore(new Block('#9B6ABD', 'diru', {type: 'string', value: 'Saluton!'}, 'dum', {type: 'number', value: '2'}, 'sekundoj'));
+script.insertBefore(new Block('#6A92BC', 'iru al x:', {type: 'number', value: 0}, 'y:', {type: 'number', value: 0}));
+script.insertBefore(new Block('#6ABC88', {type: 'number', value: ''}, '+', {type: 'number', value: ''}));
+script.insertBefore(new Block('#BC6AA1', 'ŝanĝu rapidon je', {type: 'number', value: 20}));
+script.insertBefore(new Block('#6AB6BC', 'salutnomo'));
+script.insertBefore(new Block('#BDB16A', 'ripetu', {type: 'number', value: 10}, '-foje'));
+script.insertBefore(new Block('#818181', 'kio ajn'));
+workspace.appendChild(script.wrapper);
+    </script>
+  </body>
+  <!-- MADE BY SEAN -->
+</html>
