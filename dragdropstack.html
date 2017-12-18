@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Drag and drop for stack blocks</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="The goal is to have a Scratch/Blockly-like drag-and-drop for at least stack blocks."/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" type="text/css" href="../sheep2.css">
+    <script src="../sheep2.js" charset="utf-8"></script>
+    <style>
+      body {
+        background-color: #222;
+        font-size: 0;
+      }
+      #editor {
+        border: 1px solid white;
+        width: 400px;
+        height: 400px;
+        margin: 20px;
+        overflow: auto;
+        position: relative;
+      }
+      .script {
+        position: absolute;
+      }
+      .block {
+        height: 30px;
+        box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2);
+        position: absolute;
+      }
+      .drag-queue {
+        z-index: 1000;
+      }
+      .hitbox {
+        border: 1px solid red;
+        position: absolute;
+        z-index: 500;
+        box-sizing: border-box;
+      }
+      .preview {
+        position: absolute;
+        box-shadow: 0 0 3px 1px white;
+      }
+      button {
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor"></div>
+    <button id="newblock">new block</button>
+
+    <script>
+const colours = ["BD806A", "9B6ABD", "6A92BC", "6ABC88", "BC6AA1", "6AB6BC", "BDB16A", "818181"],
+workspace = document.querySelector('#editor'),
+scripts = [],
+BLOCK_HEIGHT = 30,
+X_SNAP_PADDING = 15,
+Y_SNAP_PADDING = 30;
+
+class Script {
+  constructor(x, y) {
+    this.element = document.createElement("div");
+    this.element.classList.add("script");
+
+    this.x = x || 0;
+    this.y = y || 0;
+    this.blocks = [];
+  }
+  addBlock(block, position = this.blocks.length) {
+    if (this.blocks.length === 0 && this.revive) this.revive();
+    block.removeParent();
+    block.parent = this;
+    this.element.appendChild(block.element);
+    this.blocks.splice(position, 0, block);
+    this.updateBlocks();
+  }
+  removeBlock(position) {
+    if (position >= this.blocks.length) return;
+    this.blocks[position].parent = null;
+    this.element.removeChild(this.blocks[position].element);
+    this.blocks.splice(position, 1);
+    this.updateBlocks();
+    if (this.blocks.length === 0 && this.kill) this.kill();
+  }
+  updateBlocks() {
+    let i = this.blocks.length;
+    while (i--) {
+      this.blocks[i].y = i * BLOCK_HEIGHT;
+    }
+  }
+  revive() {
+    workspace.appendChild(this.element);
+    scripts.push(this);
+  }
+  kill() {
+    workspace.removeChild(this.element);
+    scripts.splice(scripts.indexOf(this), 1);
+  }
+  set x(x) {
+    this.getX = x;
+    this.element.style.left = x + "px";
+  }
+  set y(y) {
+    this.getY = y;
+    this.element.style.top = y + "px";
+  }
+  get hitboxes() {
+    let hitboxes = [
+      Hitbox.smart(this.blocks[0], -Y_SNAP_PADDING, Y_SNAP_PADDING, false),
+      Hitbox.smart(this.blocks[this.blocks.length - 1], BLOCK_HEIGHT, Y_SNAP_PADDING, true),
+    ];
+    let i = this.blocks.length;
+    while (i--) hitboxes.push(...this.blocks[i].hitboxes);
+    return hitboxes;
+  }
+}
+class DragQueue extends Script {
+  constructor() {
+    super(0, 0);
+    this.element.classList.add('drag-queue');
+    workspace.appendChild(this.element);
+    scripts.splice(scripts.indexOf(this), 1);
+
+    this.dragging = false;
+    this.lastMousePos = {x: 0, y: 0};
+    this.dragOffset = {dx: 0, dy: 0};
+    this.potentialSnapTarget = null;
+
+    workspace.addEventListener("mousemove", e => {
+      this.lastMousePos.x = e.clientX;
+      this.lastMousePos.y = e.clientY;
+
+      if (this.dragging) {
+        this.moveToMouse();
+        if (this.potentialSnapTarget) {
+          if (!this.potentialSnapTarget.hitbox.inside(this.getX, this.getY)) {
+            this.potentialSnapTarget.hitbox.unpreview();
+            this.potentialSnapTarget = null;
+          }
+        } else {
+          for (let scriptI = scripts.length; scriptI--;) {
+            let hitboxes = scripts[scriptI].hitboxes;
+            for (let hitboxesI = hitboxes.length; hitboxesI--;) {
+              if (!hitboxes[hitboxesI].inside(this.getX, this.getY)) continue;
+              hitboxes[hitboxesI].preview(this.blocks[0].width);
+              this.potentialSnapTarget = {
+                hitbox: hitboxes[hitboxesI],
+                script: hitboxes[hitboxesI].script,
+                position: hitboxes[hitboxesI].position
+              };
+              scriptI = hitboxesI = 0;
+            }
+          }
+        }
+      }
+    }, false);
+    workspace.addEventListener("mouseup", e => {
+      if (this.potentialSnapTarget) {
+        this.potentialSnapTarget.hitbox.unpreview();
+        if (this.potentialSnapTarget.position === 0) {
+          this.potentialSnapTarget.script.y = this.potentialSnapTarget.script.getY - this.blocks.length * BLOCK_HEIGHT;
+        }
+        while (this.blocks.length) {
+          this.potentialSnapTarget.script.addBlock(
+            this.blocks[this.blocks.length - 1],
+            this.potentialSnapTarget.position
+          );
+        }
+      } else {
+        let script = new Script(this.getX, this.getY);
+        while (this.blocks.length) script.addBlock(this.blocks[0]);
+      }
+      this.dragOffset.dx = this.dragOffset.dy = 0;
+      this.potentialSnapTarget = null;
+    }, false);
+  }
+  kill() {
+    this.dragging = false;
+  }
+  revive() {
+    this.dragging = true;
+    this.moveToMouse();
+  }
+  moveToMouse() {
+    this.x = this.lastMousePos.x - this.dragOffset.dx;
+    this.y = this.lastMousePos.y - this.dragOffset.dy;
+  }
+  hereIAm(relX, relY) {
+    if (!this.dragging) {
+      this.dragOffset.dx = this.lastMousePos.x - relX;
+      this.dragOffset.dy = this.lastMousePos.y - relY;
+    }
+  }
+}
+class DummyBlock {
+  constructor() {
+    this.width = Math.floor(Math.random() * 200) + 14;
+
+    this.element = document.createElement("div");
+    this.element.classList.add("block");
+    this.element.style.backgroundColor = "#" + colours[Math.floor(Math.random() * colours.length)];
+    this.element.style.width = this.width + "px";
+
+    this.element.addEventListener("mousedown", e => {
+      if (!dragQueue.dragging) {
+        dragQueue.hereIAm(this.parent.getX, this.parent.getY + this.getY);
+
+        let scriptBlocksRef = this.parent.blocks,
+        blockPosition = scriptBlocksRef.indexOf(this);
+        while (scriptBlocksRef.length > blockPosition) dragQueue.addBlock(scriptBlocksRef[blockPosition]);
+      }
+    }, false);
+
+    this.y = 0;
+    this.parent = null;
+  }
+  removeParent() {
+    if (this.parent) this.parent.removeBlock(this.parent.blocks.indexOf(this));
+  }
+  set y(y) {
+    this.getY = y;
+    this.element.style.top = y + "px";
+  }
+  get hitboxes() {
+    return [
+      Hitbox.smart(this, 0, BLOCK_HEIGHT / 2, false),
+      Hitbox.smart(this, BLOCK_HEIGHT / 2, BLOCK_HEIGHT / 2, true)
+    ];
+  }
+}
+class Hitbox {
+  constructor(script, minX, minY, maxX, maxY, previewX, previewY, position) {
+    this.script = script;
+    this.minX = minX,
+    this.minY = minY,
+    this.maxX = maxX,
+    this.maxY = maxY;
+    this.previewX = previewX;
+    this.previewY = previewY;
+    this.position = position;
+
+    this.element = document.createElement("div");
+    this.element.classList.add("hitbox");
+    this.element.style.left = this.minX + "px";
+    this.element.style.top = this.minY + "px";
+    this.element.style.width = (this.maxX - this.minX) + "px";
+    this.element.style.height = (this.maxY - this.minY) + "px";
+
+    this.previewElem = document.createElement("div");
+    this.previewElem.classList.add("preview");
+    this.previewElem.style.left = this.previewX + "px";
+    this.previewElem.style.top = this.previewY + "px";
+  }
+  show() {
+    workspace.appendChild(this.element);
+  }
+  preview(width) {
+    this.previewElem.style.width = width + "px";
+    workspace.appendChild(this.previewElem);
+  }
+  unpreview() {
+    workspace.removeChild(this.previewElem);
+  }
+  inside(x, y) {
+    return x >= this.minX && x <= this.maxX
+        && y >= this.minY && y <= this.maxY;
+  }
+  static smart(parent, relY, height, after) {
+    let minY = parent.parent.getY + parent.getY + relY;
+    return new Hitbox(
+      parent.parent,
+      parent.parent.getX - X_SNAP_PADDING,
+      minY,
+      parent.parent.getX + parent.width,
+      minY + height,
+      parent.parent.getX,
+      parent.parent.getY + parent.getY + (after ? BLOCK_HEIGHT : 0),
+      parent.parent.blocks.indexOf(parent) + +after
+    );
+  }
+}
+const dragQueue = new DragQueue(),
+newBlockBtn = document.querySelector('#newblock');
+let script = new Script(50, 50),
+block1 = new DummyBlock(),
+block2 = new DummyBlock(),
+block3 = new DummyBlock();
+script.addBlock(block1);
+script.addBlock(block2);
+script.addBlock(block3);
+newBlockBtn.addEventListener("mousedown", e => {
+  let boundingRect = workspace.getBoundingClientRect();
+  dragQueue.hereIAm(dragQueue.lastMousePos.x - boundingRect.left, dragQueue.lastMousePos.y - boundingRect.top);
+  dragQueue.addBlock(new DummyBlock());
+}, false);
+console.log(`scripts.map(a => a.hitboxes.map(b => b.show())) // to show hitboxes`);
+    </script>
+  </body>
+  <!-- MADE BY SEAN -->
+</html>
